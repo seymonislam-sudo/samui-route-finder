@@ -121,7 +121,7 @@ textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);backg
   <div class="board">London → Koh Samui · Summer 2027</div>
 </div></header>
 <main class="wrap" id="app"></main>
-<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 17 · Updated Mon 19 Oct 2026, 12:57</footer>
+<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 18 · Updated Mon 19 Oct 2026, 13:04</footer>
 <div id="toast" class="toast" hidden></div>
 
 <script>
@@ -156,15 +156,18 @@ function seed(){return{travellers:6,stay:3000,sort:'cheap',options:[
     hotels:[hotel('Dewa Phuket, Nai Yang, 24 Jul + 8 Aug',2,2,80.5)]}
 ]}}
 
-const earlySeed=()=>({on:true,out:'2027-07-20',people:2,items:[{id:uid(),name:'Bangkok hotel, 1 night (21 Jul)',cost:80},{id:uid(),name:'Flights Bangkok ⇄ Siem Reap, £200 each',cost:400},{id:uid(),name:'Shinta Mani Angkor, 2 nights (22–23 Jul)',cost:300}]});
+const hktSet=()=>({city:'Phuket',items:[{id:uid(),name:'Phuket hotel, 1 night (21 Jul)',cost:80},{id:uid(),name:'Flights Phuket ⇄ Siem Reap, £409 each (about 5h)',cost:818},{id:uid(),name:'Shinta Mani Angkor, 2 nights (22–23 Jul)',cost:300}]});
+const earlySeed=()=>({on:true,out:'2027-07-20',sets:{BKK:{city:'Bangkok',items:[{id:uid(),name:'Bangkok hotel, 1 night (21 Jul)',cost:80},{id:uid(),name:'Flights Bangkok ⇄ Siem Reap, £200 each',cost:400},{id:uid(),name:'Shinta Mani Angkor, 2 nights (22–23 Jul)',cost:300}]},HKT:hktSet()}});
 let S=null;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!Array.isArray(S.options))S=seed();
 if(S.stay==null)S.stay=3000;
 if(!S.early)S.early=earlySeed();
+if(!S.early.sets){S.early.sets={BKK:{city:'Bangkok',items:S.early.items||[]},HKT:hktSet()};delete S.early.items}
 const open=new Set();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
-const viaBkk=o=>o.legs.some(l=>/^BKK$/i.test(l.to))&&o.hotels.length>0;
+const hubOf=o=>o.hotels.length?['BKK','HKT'].find(c=>o.legs.some(l=>(l.to||'').toUpperCase()===c)):null;
+const setTotal=k=>(S.early.sets[k]?.items||[]).reduce((s,x)=>s+(+x.cost||0),0);
 function calc(o){
   const t=Math.max(1,+S.travellers||1);
   const fares=o.legs.reduce((s,l)=>s+(+l.price||0),0)*t;
@@ -173,8 +176,8 @@ function calc(o){
   const nights=o.hotels.reduce((s,h)=>s+(+h.nights||0),0);
   const stay=+S.stay||0;
   const via=o.legs.find(l=>l.alts)?.carrier;
-  const early=S.early&&S.early.on&&viaBkk(o)?S.early.items.reduce((s,x)=>s+(+x.cost||0),0):0;
-  return{via,early,total:fares+hotels+stay+early,pp:(fares+hotels+stay+early)/t,fares,hotels,stay,flights,boats,nights};
+  const hub=hubOf(o),early=S.early&&S.early.on&&hub&&S.early.sets[hub]?setTotal(hub):0;
+  return{via,early,hub,total:fares+hotels+stay+early,pp:(fares+hotels+stay+early)/t,fares,hotels,stay,flights,boats,nights};
 }
 function route(o){
   const out=[];for(const l of o.legs){if(!out.length||out[out.length-1]!==l.from)out.push(l.from);out.push(l.to)}
@@ -224,15 +227,15 @@ function plan(o){
   }
   return days;
 }
-function earlyDays(){const o=S.early.out,D=k=>addD(o,k);return{
-  [D(0)]:{k:'travel',icons:['plane'],t:'Fly London → Bangkok'},
-  [D(1)]:{k:'hotel',icons:['plane','bed'],t:'Land Bangkok · night in Bangkok'},
-  [D(2)]:{k:'travel',icons:['plane','bed'],t:'Fly Bangkok → Siem Reap · Shinta Mani'},
+function earlyDays(hub){const o=S.early.out,D=k=>addD(o,k),c=S.early.sets[hub]?.city||hub;return{
+  [D(0)]:{k:'travel',icons:['plane'],t:'Fly London → '+c},
+  [D(1)]:{k:'hotel',icons:['plane','bed'],t:'Land '+c+' · night in '+c},
+  [D(2)]:{k:'travel',icons:['plane','bed'],t:'Fly '+c+' → Siem Reap · Shinta Mani'},
   [D(3)]:{k:'hotel',icons:['bed'],t:'Siem Reap · Angkor Wat'},
-  [D(4)]:{k:'travel',icons:['plane'],t:'Fly Siem Reap → Bangkok, meet everyone'}}}
+  [D(4)]:{k:'travel',icons:['plane'],t:'Fly Siem Reap → '+c+', meet everyone'}}}
 function renderCal(){
   const rows=S.options.map((o,i)=>({o,n:i+1,c:calc(o),days:plan(o)}));
-  const all=rows.flatMap(r=>Object.keys(r.days).concat(r.c.early?Object.keys(earlyDays()):[])).sort();
+  const all=rows.flatMap(r=>Object.keys(r.days).concat(r.c.early?Object.keys(earlyDays(r.c.hub)):[])).sort();
   if(!all.length)return '<p>Add dates to your flights to see the calendar.</p>';
   const dates=[];for(let d=all[0];d<=all[all.length-1];d=addD(d,1))dates.push(d);
   const W=['S','M','T','W','T','F','S'];
@@ -243,7 +246,7 @@ function renderCal(){
   for(const r of rows){
     const samui=Object.values(r.days).filter(x=>x.k==='samui').length;
     h+=`<div class="lab"><b>${r.n}. ${esc(r.o.name)}</b><small>${gbp(r.c.total)} · ${samui} Samui days</small></div>`;
-    h+=dates.map(d=>{const x=r.days[d];return x?`<div class="c ${x.k}" title="${esc(fdT(d)+'\n'+x.t)}">${x.icons.map(k=>ICON[k]).join('')}</div>`:'<div class="c"></div>'}).join('');    if(r.c.early){const ed=earlyDays();h+=`<div class="lab" style="padding-left:18px"><small style="font-family:var(--body)">↳ Seymon &amp; Charlie early</small><small>+${gbp(r.c.early)}</small></div>`;
+    h+=dates.map(d=>{const x=r.days[d];return x?`<div class="c ${x.k}" title="${esc(fdT(d)+'\n'+x.t)}">${x.icons.map(k=>ICON[k]).join('')}</div>`:'<div class="c"></div>'}).join('');    if(r.c.early){const ed=earlyDays(r.c.hub);h+=`<div class="lab" style="padding-left:18px"><small style="font-family:var(--body)">↳ Seymon &amp; Charlie early</small><small>+${gbp(r.c.early)}</small></div>`;
       h+=dates.map(d=>{const x=ed[d];return x?`<div class="c ${x.k}" title="${esc(fdT(d)+'\n'+x.t)}">${x.icons.map(k=>ICON[k]).join('')}</div>`:'<div class="c"></div>'}).join('')}
   }
   return h+'</div></div><p style="font-size:13px;color:var(--muted);margin:0">Built from the dates on each option\'s flights. Tap and hold a day to see what\'s happening.</p>';
@@ -282,14 +285,14 @@ function render(){
     <textarea id="io" placeholder="Paste copied data here"></textarea></div></details>`;
   document.getElementById('app').innerHTML=h;
 }
-function earlyCard(){const e=S.early,tot=e.items.reduce((s,x)=>s+(+x.cost||0),0);
+function earlyCard(){const e=S.early,ks=Object.keys(e.sets);
   return `<div class="opt early"><div class="sum" style="grid-template-columns:minmax(0,1fr) auto">
    <label style="flex-direction:row;align-items:flex-start;gap:10px;font-size:15px;color:var(--ink)"><input type="checkbox" id="early-on" ${e.on?'checked':''} style="width:20px;height:20px;margin-top:2px">
-    <span><b>Seymon &amp; Charlie go early via Siem Reap</b><br><span style="font-size:13px;color:var(--muted)">Fly out 20 Jul, 1 night Bangkok, 2 nights Siem Reap, back to Bangkok 24 Jul to meet everyone. Added to the Bangkok options; London flights assumed the same price.</span></span></label>
-   <div class="total"><b data-sum="early">${gbp(tot)}</b><small>for two</small></div></div>
-   <details ${open.has('early')?'open':''} data-o="early"><summary>Details</summary><div class="panel"><div class="rows">
-   ${e.items.map(x=>`<div class="r hotel" data-e="${x.id}"><label class="w3" style="grid-column:span 3">Item<input id="en-${x.id}" data-ef="name" value="${esc(x.name)}"></label><label>£ total<input id="ec-${x.id}" data-ef="cost" inputmode="decimal" value="${esc(x.cost)}"></label><span></span></div>`).join('')}
-   </div></div></details></div>`}
+    <span><b>Seymon &amp; Charlie go early via Siem Reap</b><br><span style="font-size:13px;color:var(--muted)">Fly out 20 Jul, 1 night at the stopover, 2 nights Siem Reap, back 24 Jul to meet everyone. Added to the Bangkok and Phuket options; London flights assumed the same price.</span></span></label>
+   <div class="total">${ks.map(k=>`<b style="font-size:16px" data-sum="early-${k}">${gbp(setTotal(k))}</b><small>from ${esc(e.sets[k].city)}</small>`).join('')}</div></div>
+   <details ${open.has('early')?'open':''} data-o="early"><summary>Details</summary><div class="panel">
+   ${ks.map(k=>`<h3>From ${esc(e.sets[k].city)}</h3><div class="rows">${e.sets[k].items.map(x=>`<div class="r hotel" data-e="${x.id}" data-set="${k}"><label class="w3" style="grid-column:span 3">Item<input id="en-${x.id}" data-ef="name" value="${esc(x.name)}"></label><label>£ total<input id="ec-${x.id}" data-ef="cost" inputmode="decimal" value="${esc(x.cost)}"></label><span></span></div>`).join('')}</div>`).join('')}
+   </div></details></div>`}
 function facts(c){return `${c.via?`<span>Flying <b>${esc(c.via)}</b></span>`:''}<span><b>${c.flights}</b> flight${c.flights===1?'':'s'}${c.boats?` + <b>${c.boats}</b> ferry`:''}</span>${c.nights?`<span><b>${c.nights}</b> hotel night${c.nights>1?'s':''} · ${gbp(c.hotels)}</span>`:''}<span>Fares ${gbp(c.fares)}</span>${c.stay?`<span>Airbnb ${gbp(c.stay)}</span>`:''}${c.early?`<span>Siem Reap side trip <b>${gbp(c.early)}</b></span>`:''}`}
 function refresh(o){
   const card=document.getElementById('o-'+o.id);if(!card)return;const c=calc(o);
@@ -307,7 +310,7 @@ document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='trav'){S.travellers=Math.max(1,+el.value||1);S.options.forEach(refresh);save();return}
   if(el.id==='early-on'){S.early.on=el.checked;save();const y=window.scrollY;render();window.scrollTo(0,y);return}
-  const er=el.closest('[data-e]');if(er){const x=S.early.items.find(i=>i.id===er.dataset.e);x[el.dataset.ef]=el.dataset.ef==='cost'?el.value.replace(/[£,\s]/g,''):el.value;const t=S.early.items.reduce((s,i)=>s+(+i.cost||0),0);document.querySelector('[data-sum=early]').textContent=gbp(t);S.options.forEach(refresh);save();return}
+  const er=el.closest('[data-e]');if(er){const k=er.dataset.set,x=S.early.sets[k].items.find(i=>i.id===er.dataset.e);x[el.dataset.ef]=el.dataset.ef==='cost'?el.value.replace(/[£,\s]/g,''):el.value;document.querySelector('[data-sum=early-'+k+']').textContent=gbp(setTotal(k));S.options.forEach(refresh);save();return}
   if(el.id==='stay'){S.stay=+el.value.replace(/[£,\s]/g,'')||0;S.options.forEach(refresh);save();return}
   const card=el.closest('.opt');if(!card)return;const o=find(card.id.slice(2));
   if(el.dataset.of){o[el.dataset.of]=el.value;if(el.dataset.of==='name')card.querySelector('.name').textContent=el.value}
