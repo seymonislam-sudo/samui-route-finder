@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Samui Route Finder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: departure-board header, sticky tab bar, single working column (max 920px) of option cards and editors */
+:root{
+  --bg:#EDF3F4; --surface:#FFFFFF; --ink:#10252C; --muted:#566C73; --line:#D2DFE2; --chip:#E1EBED;
+  --accent:#0B6B75; --accent-ink:#FFFFFF; --sun:#B87612; --sun-soft:#FBEED3; --sea:#2E7FB8; --sea-soft:#DDEBF6;
+  --palm:#2F8A57; --palm-soft:#DDF0E4; --bed:#7A55B0; --bed-soft:#ECE4F7; --bad:#B23A3A; --board:#0F2128; --board-ink:#F2C14E;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B161A; --surface:#12222A; --ink:#E3EDEF; --muted:#8EA5AC; --line:#233840; --chip:#1A2F37;
+  --accent:#43B5C0; --accent-ink:#04181B; --sun:#EAB24E; --sun-soft:#3A2D12; --sea:#6DB2E6; --sea-soft:#15304A;
+  --palm:#5CC488; --palm-soft:#143322; --bed:#B597E6; --bed-soft:#2A2040; --bad:#E57A7A; --board:#060E11; --board-ink:#F2C14E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B161A; --surface:#12222A; --ink:#E3EDEF; --muted:#8EA5AC; --line:#233840; --chip:#1A2F37;
+  --accent:#43B5C0; --accent-ink:#04181B; --sun:#EAB24E; --sun-soft:#3A2D12; --sea:#6DB2E6; --sea-soft:#15304A;
+  --palm:#5CC488; --palm-soft:#143322; --bed:#B597E6; --bed-soft:#2A2040; --bad:#E57A7A; --board:#060E11; --board-ink:#F2C14E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--board)}
+header.top{background:var(--board);color:#E9F1F2}
+header.top .wrap{padding-block:18px 14px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:end;justify-content:space-between}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,44px);letter-spacing:.02em;line-height:1;margin:0;text-transform:uppercase;color:var(--board-ink)}
+.board{font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:#9FB6BC;text-transform:uppercase}
+.board b{color:#E9F1F2;font-weight:500}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{font:600 14px var(--body);color:var(--muted);background:none;border:0;padding:13px 12px 11px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+main{padding-block:18px 60px;display:flex;flex-direction:column;gap:22px}
+h2{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.03em;text-transform:uppercase;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0;font-weight:600}
+.sub{color:var(--muted);font-size:13.5px;margin:2px 0 0}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.note{background:var(--sun-soft);border:1px solid color-mix(in srgb,var(--sun) 35%,transparent);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,.btn{font:600 13.5px var(--body);border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.ghost{background:none;border-color:transparent;color:var(--muted);padding:6px 8px}
+button.danger{color:var(--bad)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font-weight:500;padding:6px 10px;border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input,select,textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 9px;width:100%;min-width:0}
+textarea{font-family:var(--mono);font-size:12.5px;min-height:110px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spread{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.chip{font:500 11.5px var(--mono);background:var(--chip);color:var(--muted);border-radius:5px;padding:2px 6px;white-space:nowrap}
+.chip.sun{background:var(--sun-soft);color:var(--sun)}
+.chip.acc{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+/* scenario bars */
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;cursor:pointer;border-radius:8px;padding:8px;margin:-8px;border:1px solid transparent}
+.bar-row[aria-current="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.bar-row .name{font-weight:600}
+.bar-row .tot{font:600 17px var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.track{grid-column:1/-1;height:12px;background:var(--chip);border-radius:3px;overflow:hidden;display:flex}
+.track span{height:100%}
+.bar-row .meta{grid-column:1/-1;font-size:12.5px;color:var(--muted)}
+/* options */
+.trip{display:flex;flex-direction:column;gap:10px}
+.trip-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.opt{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-width:0}
+.opt.picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.opt-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.rank{font:800 22px var(--display);color:var(--muted);width:20px}
+.price b{font:600 20px var(--mono);font-variant-numeric:tabular-nums;display:block;line-height:1.1}
+.price small{color:var(--muted);font-size:12px}
+.badges{display:flex;flex-wrap:wrap;gap:5px;flex:1}
+.jr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:13px}
+.dir{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);width:38px}
+.ap{font:600 13px var(--mono)}
+.ap small{font-weight:400;color:var(--muted);margin-left:3px}
+.seg-l{display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:12px}
+.seg-l svg{width:15px;height:15px}
+.stay{font-size:12px;padding:2px 7px;border-radius:5px;background:var(--bed-soft);color:var(--bed);display:inline-flex;gap:4px;align-items:center}
+.stay svg{width:14px;height:14px}
+.wait{font-size:12px;color:var(--sun)}
+.facts{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.facts b{color:var(--ink);font-weight:600}
+.warn{color:var(--bad);font-size:12.5px}
+/* calendar */
+.cal-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table.cal{border-collapse:collapse;width:100%;min-width:480px;font-size:12.5px}
+.cal th,.cal td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top;text-align:left}
+.cal thead th{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg);position:sticky;top:0}
+.cal td.d{white-space:nowrap;font:500 12.5px var(--mono);width:92px;color:var(--muted)}
+.cal tr.we td.d{color:var(--ink)}
+.cal td.d b{display:block;color:var(--ink);font-weight:600}
+.ev{display:flex;align-items:center;gap:6px;margin:2px 0;line-height:1.25}
+.ic{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center}
+.ic svg{width:14px;height:14px}
+.ic.plane{background:var(--sea-soft);color:var(--sea)}
+.ic.boat{background:var(--sea-soft);color:var(--sea)}
+.ic.car{background:var(--chip);color:var(--muted)}
+.ic.bed{background:var(--bed-soft);color:var(--bed)}
+.ic.palm{background:var(--palm-soft);color:var(--palm)}
+.ic.home{background:var(--sun-soft);color:var(--sun)}
+.cal tr.collapsed td{background:var(--palm-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+/* legs list */
+.day{display:flex;flex-direction:column;gap:6px}
+.day h4{margin:6px 0 0;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.leg{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.leg .r{font:600 13.5px var(--mono);font-variant-numeric:tabular-nums;flex:1 1 220px;min-width:0}
+.leg .r small{font-weight:400;color:var(--muted)}
+.leg .p{font:600 14px var(--mono)}
+.err{color:var(--bad);font-size:13px;min-height:1em}
+.tbl{display:flex;flex-direction:column;gap:8px}
+.tbl .tr{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr)) auto;gap:8px;align-items:end}
+.links{display:flex;flex-direction:column}
+.link{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.link .what{flex:1 1 220px;min-width:0}
+.link .what b{font-family:var(--mono)}
+.link a{font:600 13px var(--body);color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:7px;padding:6px 10px;background:var(--surface)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:9px;padding:10px 14px;display:flex;gap:12px;align-items:center;z-index:20;font-size:14px;max-width:calc(100% - 32px)}
+.toast button{background:none;border:1px solid currentColor;color:inherit;padding:4px 10px}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <h1>Samui Route Finder</h1>
+  <div class="board">London <b>→</b> Koh Samui · <b>Summer 2027</b></div>
+</div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap">
+  <button data-tab="compare">Compare</button>
+  <button data-tab="calendar">Calendar</button>
+  <button data-tab="legs">Flights &amp; boats</button>
+  <button data-tab="search">Search</button>
+  <button data-tab="trips">Trips &amp; settings</button>
+</div></nav>
+<main class="wrap" id="app"></main>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const KEY='samui-route-finder-v1';
+const TZ={LHR:1,LGW:1,STN:1,LTN:1,LCY:1,SEN:1,MAN:1,BHX:1,EDI:1,GLA:1,BRS:1,
+  BKK:7,DMK:7,USM:7,URT:7,SMP:7,HKT:7,KBV:7,CNX:7,NST:7,TDX:7,SAI:7,REP:7,PNH:7,SGN:7,HAN:7,
+  SIN:8,KUL:8,HKG:8,TPE:8,PVG:8,PEK:8,CAN:8,MNL:8,DXB:4,AUH:4,MCT:4,DOH:3,BAH:3,IST:3,HEL:3,RUH:3,
+  CMB:5.5,DEL:5.5,BOM:5.5,FRA:2,MUC:2,AMS:2,CDG:2,ZRH:2,VIE:2,CPH:2};
+const AREAS={LON:['LHR','LGW','STN','LTN','LCY','SEN'],SAMUI:['USM','SMP']};
+const PLACE={LHR:'Heathrow',LGW:'Gatwick',BKK:'Bangkok',DMK:'Bangkok Don Mueang',USM:'Samui airport',SMP:'Samui pier',URT:'Surat Thani',SIN:'Singapore',KUL:'Kuala Lumpur',DXB:'Dubai',DOH:'Doha',HKT:'Phuket'};
+const ICON={
+ plane:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2.5 1.8V21L11.5 20l3.5 1v-1.2L12.5 18v-5z"/></svg>',
+ boat:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14h16l-2.2 4.4A2 2 0 0 1 16 19.5H8a2 2 0 0 1-1.8-1.1zM7 13l1-5h8l1 5zM11 4h2v3h-2zM2 21.5c1.7 0 2.5-1 4-1s2.3 1 4 1 2.5-1 4-1 2.3 1 4 1 2.3-1 4-1v-1.5c-1.7 0-2.5 1-4 1s-2.3-1-4-1-2.5 1-4 1-2.3-1-4-1-2.3 1-4 1z"/></svg>',
+ car:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.6-4.3A2 2 0 0 1 8.5 5.4h7a2 2 0 0 1 1.9 1.3L19 11a2 2 0 0 1 2 2v4h-2v2h-3v-2H8v2H5v-2H3v-4a2 2 0 0 1 2-2zm2.2 0h9.6l-1.1-3.3H8.3zM6.5 15.5a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm11 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"/></svg>',
+ bed:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v8h6V8h7a3 3 0 0 1 3 3v8h-2v-3H5v3H3zm5 7a2.2 2.2 0 1 1 0-4.4A2.2 2.2 0 0 1 8 12z"/></svg>',
+ palm:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 9.2c.4 3.6.3 7.6-.6 11.8h-2c.9-3.9 1.1-7.6.7-11C8.2 9.5 5.6 10.6 3 12.5c1.2-3.4 4-5 7-5.2C8.5 5.7 6.2 5 4 5.3 6.7 3.4 9.7 3.6 11.7 5.9 12.6 3.6 15 2.4 18 3c-2.4.6-4 1.9-4.6 3.6 3.3-.6 6.2.6 7.6 3.6-2.5-1.4-5.4-1.6-8.4-1z"/></svg>',
+ home:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 7.5-1.3 1.5L18 10.6V20h-4.5v-5.5h-3V20H6v-9.4L4.3 12 3 10.5z"/></svg>'
+};
+const modeIcon=m=>m==='ferry'?'boat':m==='transfer'?'car':'plane';
+const SORTS=[['value','Best value'],['cheap','Cheapest'],['flights','Fewest flights'],['fast','Least travel time'],['beach','Most Samui nights']];
+
+/* ---------- dates ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function dU(d){const[y,m,dd]=d.split('-').map(Number);return Date.UTC(y,m-1,dd)}
+function addDays(d,k){return new Date(dU(d)+k*864e5).toISOString().slice(0,10)}
+function dayDiff(a,b){return Math.round((dU(b)-dU(a))/864e5)}
+function localMs(d,t){const[h,mi]=(t||'00:00').split(':').map(Number);return dU(d)+(h*60+mi)*6e4}
+function utc(d,t,c){return localMs(d,t)-(TZ[c]??0)*36e5}
+function fd(d){if(!d)return'';const t=new Date(dU(d));return `${DOW[t.getUTCDay()]} ${t.getUTCDate()} ${MON[t.getUTCMonth()]}`}
+const gbp=n=>'£'+Math.round(n).toLocaleString('en-GB');
+function hrs(h){const m=Math.round(h*60);return Math.floor(m/60)+'h'+(m%60?pad(m%60):'')}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+/* ---------- example data ---------- */
+function seed(){
+  const parties=[{id:'p1',name:'Seymon & Charlie',people:2,rooms:1},{id:'p2',name:'Rest of family',people:4,rooms:2},{id:'p3',name:'All six',people:6,rooms:3}];
+  const scenarios=[
+    {id:'s1',name:'23 Jul – 9 Aug',trips:[{id:'t1',partyId:'p1',from:'LON',to:'SAMUI',outDate:'2027-07-20',backDate:'2027-08-08',flex:0},{id:'t2',partyId:'p2',from:'LON',to:'SAMUI',outDate:'2027-07-23',backDate:'2027-08-08',flex:0}]},
+    {id:'s2',name:'24 Jul – 7 Aug',trips:[{id:'t3',partyId:'p1',from:'LON',to:'SAMUI',outDate:'2027-07-21',backDate:'2027-08-06',flex:0},{id:'t4',partyId:'p2',from:'LON',to:'SAMUI',outDate:'2027-07-24',backDate:'2027-08-06',flex:0}]},
+    {id:'s3',name:'All together 23 Jul – 9 Aug',trips:[{id:'t5',partyId:'p3',from:'LON',to:'SAMUI',outDate:'2027-07-23',backDate:'2027-08-08',flex:0}]}];
+  const legs=[],seen=new Set();
+  const L=(o)=>{const k=[o.from,o.to,o.depD,o.depT,o.carrier].join();if(seen.has(k))return;seen.add(k);legs.push({id:uid(),mode:'flight',stops:0,tag:'',note:'',example:true,...o})};
+  const short=d=>{const t=new Date(dU(d));return t.getUTCDate()+MON[t.getUTCMonth()]};
+  const pairs=[['2027-07-20','2027-08-08',-70],['2027-07-21','2027-08-06',-50],['2027-07-23','2027-08-08',30],['2027-07-24','2027-08-06',10]];
+  for(const[o,b,adj]of pairs){
+    const te='EVA '+short(o)+'-'+short(b),tt='Thai '+short(o)+'-'+short(b);
+    L({from:'LHR',to:'BKK',depD:o,depT:'21:00',arrD:addDays(o,1),arrT:'15:20',price:845+adj,carrier:'EVA Air',tag:te,note:'Return fare'});
+    L({from:'BKK',to:'LHR',depD:addDays(b,1),depT:'00:50',arrD:addDays(b,1),arrT:'07:30',price:0,carrier:'EVA Air',tag:te,note:'Return fare'});
+    L({from:'LHR',to:'BKK',depD:o,depT:'21:35',arrD:addDays(o,1),arrT:'15:45',price:790+adj,carrier:'Thai',tag:tt,note:'Return fare'});
+    L({from:'BKK',to:'LHR',depD:addDays(b,1),depT:'00:20',arrD:addDays(b,1),arrT:'06:55',price:0,carrier:'Thai',tag:tt,note:'Return fare'});
+  }
+  for(const[o,,adj]of pairs){
+    L({from:'LHR',to:'BKK',depD:o,depT:'14:15',arrD:addDays(o,1),arrT:'12:25',price:545+Math.round(adj/2),carrier:'Emirates',stops:1});
+    L({from:'LHR',to:'SIN',depD:o,depT:'22:00',arrD:addDays(o,1),arrT:'18:20',price:715+adj,carrier:'Singapore Airlines'});
+    L({from:'BKK',to:'USM',depD:addDays(o,1),depT:'17:45',arrD:addDays(o,1),arrT:'18:55',price:195,carrier:'Bangkok Airways'});
+    L({from:'BKK',to:'USM',depD:addDays(o,2),depT:'10:15',arrD:addDays(o,2),arrT:'11:25',price:165,carrier:'Bangkok Airways'});
+    L({from:'BKK',to:'URT',depD:addDays(o,2),depT:'07:20',arrD:addDays(o,2),arrT:'08:30',price:48,carrier:'Thai AirAsia'});
+    L({from:'URT',to:'SMP',depD:addDays(o,2),depT:'09:00',arrD:addDays(o,2),arrT:'13:30',price:22,carrier:'Lomprayah coach + ferry',mode:'ferry'});
+    L({from:'SIN',to:'USM',depD:addDays(o,2),depT:'13:30',arrD:addDays(o,2),arrT:'14:40',price:189,carrier:'Bangkok Airways'});
+  }
+  for(const b of ['2027-08-06','2027-08-08']){
+    L({from:'USM',to:'BKK',depD:b,depT:'19:40',arrD:b,arrT:'20:50',price:175,carrier:'Bangkok Airways'});
+    L({from:'USM',to:'BKK',depD:b,depT:'12:00',arrD:b,arrT:'13:10',price:160,carrier:'Bangkok Airways'});
+    L({from:'SMP',to:'URT',depD:b,depT:'07:30',arrD:b,arrT:'11:30',price:22,carrier:'Lomprayah ferry + coach',mode:'ferry'});
+    L({from:'URT',to:'BKK',depD:b,depT:'13:50',arrD:b,arrT:'15:00',price:45,carrier:'Thai AirAsia'});
+    L({from:'BKK',to:'LHR',depD:addDays(b,1),depT:'09:30',arrD:addDays(b,1),arrT:'20:05',price:560,carrier:'Emirates',stops:1});
+    L({from:'USM',to:'SIN',depD:b,depT:'10:10',arrD:b,arrT:'13:15',price:185,carrier:'Bangkok Airways'});
+    L({from:'SIN',to:'LHR',depD:b,depT:'23:05',arrD:addDays(b,1),arrT:'06:00',price:690,carrier:'Singapore Airlines'});
+  }
+  return {v:1,parties,scenarios,legs,
+    hotels:[{id:uid(),code:'BKK',name:'Bangkok airport hotel',rate:85},{id:uid(),code:'SIN',name:'Singapore airport hotel',rate:165},{id:uid(),code:'URT',name:'Surat Thani hotel',rate:40}],
+    settings:{minConnect:120,maxLayover:36,maxLegs:4,timeValue:40,flightPenalty:60,nightValue:200},
+    sort:'value',view:'s1',pins:{}};
+}
+
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!Array.isArray(S.legs))S=seed();
+let tab='compare';try{tab=localStorage.getItem(KEY+':tab')||'compare'}catch(e){}
+let draft=null,editing=null,showAll={},undo=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* ---------- engine ---------- */
+const expand=a=>new Set(String(a||'').toUpperCase().split(/[\s,]+/).filter(Boolean).flatMap(x=>AREAS[x]||[x]));
+function prep(){
+  return S.legs.filter(l=>l.from&&l.to&&l.depD&&l.arrD&&l.depT&&l.arrT).map(l=>{
+    const from=l.from.toUpperCase(),to=l.to.toUpperCase();
+    return {...l,from,to,price:+l.price||0,dep:utc(l.depD,l.depT,from),arr:utc(l.arrD,l.arrT,to),depL:localMs(l.depD,l.depT),arrL:localMs(l.arrD,l.arrT),tagK:(l.tag||'').trim().toLowerCase()};
+  }).filter(l=>l.arr>l.dep);
+}
+function nightsBetween(a,b){if(b-a<6*36e5)return 0;let c=0;for(let d=Math.floor(a/864e5)*864e5;d<=b;d+=864e5){const t=d+3*36e5;if(t>a&&t<b)c++}return c}
+function findPaths(legs,fromSet,toSet,date,flex){
+  const st=S.settings,res=[],by={};
+  for(const l of legs)(by[l.from]=by[l.from]||[]).push(l);
+  const go=(path,vis)=>{
+    if(res.length>600)return;
+    const last=path[path.length-1];
+    if(toSet.has(last.to)){res.push(path.slice());return}
+    if(path.length>=st.maxLegs)return;
+    for(const n of by[last.to]||[]){
+      if(vis.has(n.to))continue;
+      const gap=(n.dep-last.arr)/6e4;
+      if(gap<st.minConnect||gap>st.maxLayover*60)continue;
+      vis.add(n.to);path.push(n);go(path,vis);path.pop();vis.delete(n.to);
+    }
+  };
+  for(const s of legs)if(fromSet.has(s.from)&&Math.abs(dayDiff(date,s.depD))<=flex)go([s],new Set([s.from,s.to]));
+  return res;
+}
+function analyse(path,party){
+  let flightCost=0,hotelCost=0,transit=0,flights=0,boats=0,missing=false;const stays=[];
+  path.forEach((l,i)=>{
+    flightCost+=l.price*party.people;transit+=(l.arr-l.dep)/36e5;
+    if(l.mode==='flight')flights++;else boats++;
+    if(i>0){const p=path[i-1];const n=nightsBetween(p.arrL,l.depL);const waitH=(l.dep-p.arr)/36e5;
+      let cost=0,rate=null;
+      if(n){const h=S.hotels.find(h=>h.code.toUpperCase()===l.from);rate=h?+h.rate:null;if(rate==null)missing=true;cost=n*(rate||0)*party.rooms;hotelCost+=cost}
+      else transit+=waitH;
+      stays.push({code:l.from,nights:n,cost,missing:n&&rate==null,waitH,arrD:p.arrD});}
+    else stays.push(null);
+  });
+  return {legs:path,flightCost,hotelCost,transit,flights,boats,stays,missing,
+    door:(path[path.length-1].arr-path[0].dep)/36e5};
+}
+function tripOptions(trip,legs,tagMap){
+  const party=S.parties.find(p=>p.id===trip.partyId);if(!party)return {party:null,opts:[]};
+  const A=expand(trip.from),B=expand(trip.to),flex=+trip.flex||0;
+  const outs=findPaths(legs,A,B,trip.outDate,flex).map(p=>analyse(p,party));
+  const backs=findPaths(legs,B,A,trip.backDate,flex).map(p=>analyse(p,party));
+  const st=S.settings,opts=[];
+  for(const o of outs)for(const b of backs){
+    const lastO=o.legs[o.legs.length-1],firstB=b.legs[0];
+    if(firstB.dep<=lastO.arr)continue;
+    const ids=new Set([...o.legs,...b.legs].map(l=>l.id));let ok=true;
+    for(const l of [...o.legs,...b.legs])if(l.tagK)for(const id of tagMap[l.tagK])if(!ids.has(id)){ok=false;break}
+    if(!ok)continue;
+    const cost=o.flightCost+o.hotelCost+b.flightCost+b.hotelCost;
+    const flights=o.flights+b.flights,transit=o.transit+b.transit;
+    const samui=dayDiff(lastO.arrD,firstB.depD);
+    const score=cost+st.timeValue*transit+st.flightPenalty*Math.max(0,flights-2)-st.nightValue*samui;
+    opts.push({key:[...o.legs,...b.legs].map(l=>l.id).join('.'),out:o,back:b,cost,pp:cost/party.people,flights,boats:o.boats+b.boats,transit,samui,score,missing:o.missing||b.missing,hotels:o.hotelCost+b.hotelCost});
+  }
+  const sorters={value:(a,b)=>a.score-b.score,cheap:(a,b)=>a.cost-b.cost||a.transit-b.transit,flights:(a,b)=>a.flights-b.flights||a.cost-b.cost,fast:(a,b)=>a.transit-b.transit||a.cost-b.cost,beach:(a,b)=>b.samui-a.samui||a.cost-b.cost};
+  opts.sort(sorters[S.sort]||sorters.value);
+  return {party,opts};
+}
+function computeAll(){
+  const legs=prep(),tagMap={};
+  for(const l of legs)if(l.tagK)(tagMap[l.tagK]=tagMap[l.tagK]||[]).push(l.id);
+  return S.scenarios.map(sc=>{
+    const trips=sc.trips.map(t=>{const r=tripOptions(t,legs,tagMap);const chosen=r.opts.find(o=>o.key===S.pins[t.id])||r.opts[0]||null;return {trip:t,...r,chosen,pinned:!!(chosen&&S.pins[t.id]===chosen.key)}});
+    const total=trips.reduce((s,t)=>s+(t.chosen?t.chosen.cost:0),0);
+    const people=trips.reduce((s,t)=>s+(t.party?t.party.people:0),0);
+    return {sc,trips,total,people,complete:trips.every(t=>t.chosen)};
+  });
+}
+
+/* ---------- views ---------- */
+function exampleNote(){return S.legs.some(l=>l.example)?`<div class="note"><b>Example fares.</b> The flights loaded here are illustrative, not live prices. Add the real ones you find on the Search tab, then clear the examples under Flights &amp; boats.</div>`:''}
+function sortBar(){return `<div class="seg" role="group" aria-label="Rank by">${SORTS.map(([k,l])=>`<button data-act="sort" data-k="${k}" aria-pressed="${S.sort===k}">${l}</button>`).join('')}</div>`}
+function chain(j){
+  let h='';
+  j.legs.forEach((l,i)=>{
+    if(i===0)h+=`<span class="ap">${l.from}<small>${l.depT}</small></span>`;
+    else{const s=j.stays[i];
+      if(s.nights)h+=`<span class="stay">${ICON.bed}${s.nights} night${s.nights>1?'s':''} ${l.from} · ${s.missing?'add hotel rate':gbp(s.cost)}</span><span class="ap">${l.from}<small>${l.depT}</small></span>`;
+      else{if(s.waitH>=5)h+=`<span class="wait">${hrs(s.waitH)} wait</span>`;h+=`<span class="ap"><small>${l.depT}</small></span>`}}
+    const dd=dayDiff(l.depD,l.arrD);
+    h+=`<span class="seg-l">${ICON[modeIcon(l.mode)]}${esc(l.carrier||l.mode)}${l.stops?` · ${l.stops} stop`:''}</span><span class="ap">${l.to}<small>${l.arrT}${dd?`+${dd}`:''}</small></span>`;
+  });
+  return h;
+}
+function optCard(o,i,all,t){
+  const min=f=>Math.min(...all.map(f)),max=f=>Math.max(...all.map(f));
+  const b=[];
+  if(all.length>1){
+    if(o.cost===min(x=>x.cost))b.push('<span class="chip sun">Cheapest</span>');
+    if(o.flights===min(x=>x.flights))b.push('<span class="chip acc">Fewest flights</span>');
+    if(o.transit===min(x=>x.transit))b.push('<span class="chip acc">Least travel</span>');
+    if(o.samui===max(x=>x.samui))b.push('<span class="chip">Most Samui nights</span>');
+  }
+  const picked=S.pins[t.id]===o.key;
+  return `<article class="opt${picked?' picked':''}">
+   <div class="opt-head"><span class="rank">${i+1}</span>
+    <div class="price"><b>${gbp(o.cost)}</b><small>${gbp(o.pp)} per person</small></div>
+    <div class="badges">${b.join('')}</div>
+    <button data-act="pin" data-t="${t.id}" data-k="${o.key}" class="${picked?'primary':''}">${picked?'Picked':'Pick'}</button></div>
+   <div class="jr"><span class="dir">Out</span>${chain(o.out)}</div>
+   <div class="jr"><span class="dir">Back</span>${chain(o.back)}</div>
+   <div class="facts"><span><b>${o.flights}</b> flight${o.flights>1?'s':''}${o.boats?` + <b>${o.boats}</b> boat/transfer`:''}</span>
+    <span>Travelling <b>${hrs(o.out.transit)}</b> out, <b>${hrs(o.back.transit)}</b> back</span>
+    <span><b>${o.samui}</b> nights on Samui</span>${o.hotels?`<span>Stopover hotels <b>${gbp(o.hotels)}</b></span>`:''}</div>
+   ${o.missing?'<div class="warn">A stopover has no hotel rate yet. Add one under Trips &amp; settings.</div>':''}
+  </article>`;
+}
+function rCompare(){
+  const R=computeAll();
+  const max=Math.max(1,...R.map(r=>r.total));
+  const cur=R.find(r=>r.sc.id===S.view)||R[0];
+  const minTot=Math.min(...R.filter(r=>r.complete).map(r=>r.total));
+  const colors=['var(--accent)','var(--sun)','var(--bed)','var(--palm)'];
+  let h=exampleNote();
+  h+=`<section><div><h2>Date options</h2><p class="sub">Total for everyone, using your picked option for each group (or the top-ranked one). Tap a row to see its routes.</p></div>${sortBar()}
+  <div class="card bars">${R.map(r=>`<div class="bar-row" data-act="view" data-k="${r.sc.id}" aria-current="${cur&&r.sc.id===cur.sc.id}" role="button" tabindex="0">
+    <span class="name">${esc(r.sc.name)} ${r.complete&&r.total===minTot&&R.length>1?'<span class="chip sun">Lowest total</span>':''}</span><span class="tot">${r.total?gbp(r.total):'–'}</span>
+    <div class="track">${r.trips.map((t,i)=>t.chosen?`<span style="width:${t.chosen.cost/max*100}%;background:${colors[i%4]}" title="${esc(t.party?.name)}"></span>`:'').join('')}</div>
+    <div class="meta">${r.trips.map((t,i)=>`<span style="color:${colors[i%4]}">■</span> ${esc(t.party?.name||'?')} ${t.chosen?gbp(t.chosen.cost):'<span class="warn">no route found</span>'}`).join(' &nbsp; ')}${r.people?` · ${gbp(r.total/r.people)} per person`:''}</div>
+  </div>`).join('')}</div></section>`;
+  if(!cur)return h+'<p>Add a date option under Trips &amp; settings.</p>';
+  h+=`<section><div class="spread"><h2>${esc(cur.sc.name)}</h2><button data-act="tab" data-k="calendar">${ICON.palm.replace('<svg','<svg width="15" height="15"')} See calendar</button></div>`;
+  for(const t of cur.trips){
+    const tr=t.trip,lim=showAll[tr.id]?t.opts.length:5;
+    h+=`<div class="trip"><div class="trip-head"><h3>${esc(t.party?.name||'Unknown group')} · ${t.party?.people||0} people</h3><span class="sub mono">Out ${fd(tr.outDate)} · leave Samui ${fd(tr.backDate)}</span></div>`;
+    if(!t.opts.length)h+=`<div class="card"><b>No complete route yet for these dates.</b><p class="sub">Add flights leaving ${fd(tr.outDate)} and returning ${fd(tr.backDate)}. The Search tab has links for each.</p><button data-act="tab" data-k="search">Open search links</button></div>`;
+    h+=t.opts.slice(0,lim).map((o,i)=>optCard(o,i,t.opts,tr)).join('');
+    if(t.opts.length>5)h+=`<button class="ghost" data-act="more" data-k="${tr.id}">${showAll[tr.id]?'Show top 5':`Show all ${t.opts.length} options`}</button>`;
+    h+='</div>';
+  }
+  return h+'</section>';
+}
+
+/* calendar */
+function tripEvents(o,party){
+  const ev={},add=(d,e)=>(ev[d]=ev[d]||[]).push(e);
+  const place=c=>PLACE[c]||c;
+  const doLegs=j=>j.legs.forEach((l,i)=>{
+    const s=j.stays[i];
+    if(s&&s.nights)for(let k=0;k<s.nights;k++)add(addDays(s.arrD,k),{t:'bed',x:`Hotel, ${place(l.from)}`});
+    add(l.depD,{t:modeIcon(l.mode),x:`${l.from} ${l.depT} → ${l.to}${l.depD===l.arrD?' '+l.arrT:''} · ${esc(l.carrier||'')}`});
+    if(l.arrD!==l.depD)add(l.arrD,{t:modeIcon(l.mode),x:`Land ${place(l.to)} ${l.arrT}`});
+  });
+  doLegs(o.out);
+  const arr=o.out.legs[o.out.legs.length-1].arrD,dep=o.back.legs[0].depD;
+  add(arr,{t:'palm',x:'Arrive on Samui'});
+  for(let d=addDays(arr,1);d<dep;d=addDays(d,1))add(d,{t:'palm',x:'Samui',mid:true});
+  add(dep,{t:'palm',x:'Last morning on Samui'});
+  doLegs(o.back);
+  add(o.back.legs[o.back.legs.length-1].arrD,{t:'home',x:'Home'});
+  return ev;
+}
+function rCalendar(){
+  const R=computeAll(),cur=R.find(r=>r.sc.id===S.view)||R[0];
+  let h=`<section><div><h2>Trip calendar</h2><p class="sub">Day by day for each group, using the option you picked (or the top-ranked one) on the Compare tab.</p></div>
+  <div class="seg" role="group" aria-label="Date option">${R.map(r=>`<button data-act="view" data-k="${r.sc.id}" aria-pressed="${cur&&r.sc.id===cur.sc.id}">${esc(r.sc.name)}</button>`).join('')}</div>
+  <div class="legend">${[['plane','Flight'],['boat','Ferry'],['car','Transfer'],['bed','Hotel night'],['palm','On Samui'],['home','Home']].map(([k,l])=>`<span><span class="ic ${k}">${ICON[k]}</span>${l}</span>`).join('')}</div>`;
+  if(!cur)return h+'</section>';
+  const cols=cur.trips.filter(t=>t.chosen).map(t=>({t,ev:tripEvents(t.chosen,t.party)}));
+  if(!cols.length)return h+'<div class="card">No routes found for this date option yet.</div></section>';
+  const dates=cols.flatMap(c=>Object.keys(c.ev)).sort();
+  const first=dates[0],last=dates[dates.length-1];
+  const rows=[];
+  for(let d=first;d<=last;d=addDays(d,1)){
+    const cells=cols.map(c=>c.ev[d]||[]);
+    const onlyMid=cells.every(c=>c.length===1&&c[0].mid);
+    const prev=rows[rows.length-1];
+    if(onlyMid&&prev&&prev.mid){prev.to=d;prev.n++;continue}
+    rows.push({d,to:d,n:1,mid:onlyMid,cells});
+  }
+  const cell=c=>c.length?c.map(e=>`<div class="ev"><span class="ic ${e.t}">${ICON[e.t]}</span><span>${e.x}</span></div>`).join(''):'<span class="sub">–</span>';
+  h+=`<div class="cal-wrap"><table class="cal"><thead><tr><th>Date</th>${cols.map(c=>`<th>${esc(c.t.party?.name)}${c.t.pinned?'':' <span class="chip">top-ranked</span>'}</th>`).join('')}</tr></thead><tbody>`;
+  for(const r of rows){
+    const we=[0,6].includes(new Date(dU(r.d)).getUTCDay());
+    if(r.mid&&r.n>1)h+=`<tr class="collapsed"><td class="d"><b>${fd(r.d)}</b>to ${fd(r.to)}</td><td colspan="${cols.length}"><div class="ev"><span class="ic palm">${ICON.palm}</span><span><b>${r.n} days on Samui</b>${cols.length>1?' – everyone together':''}</span></div></td></tr>`;
+    else h+=`<tr class="${we?'we':''}"><td class="d"><b>${fd(r.d).split(' ').slice(1).join(' ')}</b>${fd(r.d).split(' ')[0]}</td>${r.cells.map(c=>`<td>${cell(c)}</td>`).join('')}</tr>`;
+  }
+  return h+'</tbody></table></div></section>';
+}
+
+/* legs */
+function rLegs(){
+  const d=draft||{};
+  const v=k=>esc(d[k]??'');
+  let h=exampleNote()+`<section><div><h2>Flights &amp; boats</h2><p class="sub">Every flight, ferry or transfer you've found. The planner joins them into complete journeys.</p></div>
+  <form id="legform" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>
+   <h3>${editing?'Edit this leg':'Add a leg'}</h3>
+   <div class="grid">
+    <label>From<input id="f-from" value="${v('from')}" placeholder="LHR" maxlength="4" autocapitalize="characters"></label>
+    <label>To<input id="f-to" value="${v('to')}" placeholder="BKK" maxlength="4" autocapitalize="characters"></label>
+    <label>Departs<input id="f-depD" type="date" value="${v('depD')}"></label>
+    <label>Time<input id="f-depT" type="time" value="${v('depT')}"></label>
+    <label>Arrives<input id="f-arrD" type="date" value="${v('arrD')}"></label>
+    <label>Time<input id="f-arrT" type="time" value="${v('arrT')}"></label>
+    <label>£ per person<input id="f-price" inputmode="decimal" value="${v('price')}" placeholder="790"></label>
+    <label>Airline / operator<input id="f-carrier" value="${v('carrier')}" placeholder="Thai"></label>
+    <label>Type<select id="f-mode">${['flight','ferry','transfer'].map(m=>`<option ${d.mode===m?'selected':''}>${m}</option>`).join('')}</select></label>
+    <label>Stops<select id="f-stops">${[0,1,2].map(n=>`<option value="${n}" ${+d.stops===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label>Fare tag<input id="f-tag" value="${v('tag')}" placeholder="optional"></label>
+    <label>Note<input id="f-note" value="${v('note')}" placeholder="optional"></label>
+   </div>
+   <p class="sub">Use local times at each airport, as Google Flights shows them. For a <b>return fare</b>, add both directions with the same fare tag and put the full price on the outbound leg (£0 on the return). Tagged legs are only ever used together.</p>
+   <div class="err" id="f-err"></div>
+   <div class="row"><button class="primary" type="submit">${editing?'Save changes':'Add leg'}</button>${editing||draft?'<button type="button" data-act="cancel">Cancel</button>':''}</div>
+  </form>
+  <details class="card"><summary>Paste several legs at once</summary>
+   <p class="sub">One per line: from, to, depart date, time, arrive date, time, £ per person, airline, fare tag, type</p>
+   <textarea id="bulk" placeholder="LHR,BKK,2027-07-23,21:35,2027-07-24,15:45,790,Thai,Thai 23Jul,flight"></textarea>
+   <div class="err" id="bulk-err"></div><button data-act="bulk">Add these legs</button></details>`;
+  const legs=[...S.legs].sort((a,b)=>(a.depD+a.depT).localeCompare(b.depD+b.depT));
+  if(S.legs.some(l=>l.example))h+=`<div class="row"><button class="danger" data-act="clearEx">Clear example legs</button></div>`;
+  let lastD='';
+  h+='<div class="day">';
+  for(const l of legs){
+    if(l.depD!==lastD){h+=`<h4>${fd(l.depD)}</h4>`;lastD=l.depD}
+    const dd=dayDiff(l.depD,l.arrD);const tzw=!(l.from.toUpperCase() in TZ)||!(l.to.toUpperCase() in TZ);
+    h+=`<div class="leg"><span class="ic ${modeIcon(l.mode)}">${ICON[modeIcon(l.mode)]}</span>
+     <span class="r">${esc(l.from)} ${esc(l.depT)} → ${esc(l.to)} ${esc(l.arrT)}${dd?`+${dd}`:''} <small>${esc(l.carrier)}${l.stops?` · ${l.stops} stop`:''}</small></span>
+     <span class="p">${gbp(+l.price||0)}</span>
+     ${l.tag?`<span class="chip acc">${esc(l.tag)}</span>`:''}${l.example?'<span class="chip">example</span>':''}${tzw?'<span class="chip sun">unknown time zone</span>':''}
+     <button class="ghost" data-act="edit" data-k="${l.id}">Edit</button><button class="ghost danger" data-act="del" data-k="${l.id}">Delete</button></div>`;
+  }
+  return h+'</div></section>';
+}
+
+/* search links */
+const sky=c=>c==='LON'?'lond':c.toLowerCase();
+const yymmdd=d=>d.slice(2).replace(/-/g,'');
+function gfUrl(f,t,d,r){return 'https://www.google.com/travel/flights?q='+encodeURIComponent(`Flights from ${f} to ${t} on ${d}`+(r?` through ${r}`:' one way'))+'&curr=GBP&hl=en-GB'}
+function skyUrl(f,t,d,r){return `https://www.skyscanner.net/transport/flights/${sky(f)}/${sky(t)}/${yymmdd(d)}/${r?yymmdd(r)+'/':''}?currency=GBP`}
+function rSearch(){
+  const items=new Map();
+  const put=(f,t,d,r,why)=>{const k=[f,t,d,r].join();if(!items.has(k))items.set(k,{f,t,d,r,why:new Set()});items.get(k).why.add(why)};
+  for(const sc of S.scenarios)for(const tr of sc.trips){
+    const p=S.parties.find(x=>x.id===tr.partyId)?.name||'';const o=tr.outDate,b=tr.backDate;if(!o||!b)continue;
+    put('LON','BKK',o,addDays(b,1),p);put('LON','USM',o,null,p);put('LON','SIN',o,null,p);
+    put('BKK','USM',addDays(o,1),null,p);put('BKK','USM',addDays(o,2),null,p);put('BKK','URT',addDays(o,2),null,p);put('SIN','USM',addDays(o,2),null,p);
+    put('USM','BKK',b,null,p);put('USM','SIN',b,null,p);put('BKK','LON',addDays(b,1),null,p);put('SIN','LON',b,null,p);
+  }
+  const list=[...items.values()].sort((a,b)=>a.d.localeCompare(b.d)||a.f.localeCompare(b.f));
+  let h=`<section><div><h2>Search links</h2><p class="sub">Every route and date your trips need, ready to open in Google Flights or Skyscanner (prices in £). Note the price per person, then tap Add to log it.</p></div>
+  <div class="card"><h3>Custom search</h3><div class="grid" style="margin-top:10px">
+   <label>From<input id="c-from" value="LON"></label><label>To<input id="c-to" value="BKK"></label>
+   <label>Date<input id="c-d" type="date" value="2027-07-23"></label><label>Return (optional)<input id="c-r" type="date"></label></div>
+   <div class="row" style="margin-top:10px"><button data-act="custom">Make links</button></div><div id="c-out"></div></div>
+  <div class="links">`;
+  h+=list.map(i=>linkRow(i)).join('');
+  return h+'</div><p class="sub">Ferries (Surat Thani to Samui) are not on Google Flights. Lomprayah and Seatran sell combined coach and ferry tickets; add them as type "ferry".</p></section>';
+}
+function linkRow(i){
+  return `<div class="link"><div class="what"><b>${i.f} → ${i.t}</b> <span class="mono">${fd(i.d)}${i.r?` – return ${fd(i.r)}`:''}</span>${i.why?`<div class="sub">${[...i.why].map(esc).join(', ')}</div>`:''}</div>
+   <a href="${gfUrl(i.f,i.t,i.d,i.r)}" target="_blank" rel="noopener">Google Flights</a><a href="${skyUrl(i.f,i.t,i.d,i.r)}" target="_blank" rel="noopener">Skyscanner</a>
+   <button data-act="prefill" data-f="${i.f}" data-t="${i.t}" data-d="${i.d}">+ Add</button></div>`;
+}
+
+/* trips & settings */
+function rTrips(){
+  const pOpts=sel=>S.parties.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`).join('');
+  let h=`<section><div><h2>Groups</h2><p class="sub">Who travels together. Rooms sets how many stopover hotel rooms each group needs.</p></div><div class="card tbl">`;
+  h+=S.parties.map(p=>`<div class="tr"><label>Name<input id="pn-${p.id}" data-ed="party|${p.id}|name" value="${esc(p.name)}"></label><label>People<input id="pp-${p.id}" type="number" min="1" data-ed="party|${p.id}|people" value="${p.people}"></label><label>Rooms<input id="pr-${p.id}" type="number" min="1" data-ed="party|${p.id}|rooms" value="${p.rooms}"></label><button class="ghost danger" data-act="delParty" data-k="${p.id}">Remove</button></div>`).join('');
+  h+=`<div><button data-act="addParty">+ Add group</button></div></div></section>`;
+  h+=`<section><div><h2>Date options</h2><p class="sub">Each option is a set of trips. Give a group an earlier outbound date to send them ahead. "Leave Samui" is the day you start the journey home. Set To as BKK for a group that does its own thing in Bangkok first.</p></div>`;
+  for(const sc of S.scenarios){
+    h+=`<div class="card tbl"><div class="spread"><label style="flex:1">Option name<input id="sn-${sc.id}" data-ed="scen|${sc.id}|name" value="${esc(sc.name)}"></label><button class="ghost danger" data-act="delScen" data-k="${sc.id}">Remove option</button></div>`;
+    h+=sc.trips.map(t=>`<div class="tr"><label>Group<select id="tp-${t.id}" data-ed="trip|${sc.id}|${t.id}|partyId">${pOpts(t.partyId)}</select></label>
+      <label>From<input id="tf-${t.id}" data-ed="trip|${sc.id}|${t.id}|from" value="${esc(t.from)}"></label><label>To<input id="tt-${t.id}" data-ed="trip|${sc.id}|${t.id}|to" value="${esc(t.to)}"></label>
+      <label>Fly out<input id="to-${t.id}" type="date" data-ed="trip|${sc.id}|${t.id}|outDate" value="${t.outDate}"></label><label>Leave Samui<input id="tb-${t.id}" type="date" data-ed="trip|${sc.id}|${t.id}|backDate" value="${t.backDate}"></label>
+      <label>Flex days<select id="tx-${t.id}" data-ed="trip|${sc.id}|${t.id}|flex">${[0,1,2].map(n=>`<option value="${n}" ${+t.flex===n?'selected':''}>±${n}</option>`).join('')}</select></label>
+      <button class="ghost danger" data-act="delTrip" data-s="${sc.id}" data-k="${t.id}">Remove</button></div>`).join('');
+    h+=`<div><button data-act="addTrip" data-k="${sc.id}">+ Add group to this option</button></div></div>`;
+  }
+  h+=`<div><button data-act="addScen">+ Add date option</button></div><p class="sub">Area codes: LON = all London airports, SAMUI = Samui airport (USM) or Samui pier (SMP, for ferries).</p></section>`;
+  h+=`<section><div><h2>Stopover hotels</h2><p class="sub">£ per room per night, matched to the airport code where you stop overnight.</p></div><div class="card tbl">`;
+  h+=S.hotels.map(x=>`<div class="tr"><label>Airport<input id="hc-${x.id}" data-ed="hotel|${x.id}|code" value="${esc(x.code)}"></label><label>Hotel<input id="hn-${x.id}" data-ed="hotel|${x.id}|name" value="${esc(x.name)}"></label><label>£ / room / night<input id="hr-${x.id}" type="number" data-ed="hotel|${x.id}|rate" value="${x.rate}"></label><button class="ghost danger" data-act="delHotel" data-k="${x.id}">Remove</button></div>`).join('');
+  h+=`<div><button data-act="addHotel">+ Add hotel</button></div></div></section>`;
+  const st=S.settings,sf=(k,l,u)=>`<label>${l}<input id="st-${k}" type="number" data-ed="set|${k}" value="${st[k]}"><span style="text-transform:none;font-weight:400;letter-spacing:0">${u}</span></label>`;
+  h+=`<section><div><h2>How options are ranked</h2><p class="sub">Best value = total cost + a charge for hours spent travelling + a charge for each flight beyond two − a credit for each night on Samui. Adjust to taste.</p></div>
+  <div class="card grid">${sf('timeValue','Travel time','£ per hour')}${sf('flightPenalty','Extra flight','£ each beyond 2')}${sf('nightValue','Samui night','£ credit')}${sf('minConnect','Min connection','minutes')}${sf('maxLayover','Max stopover','hours')}${sf('maxLegs','Max legs','each way')}</div></section>`;
+  h+=`<section><div><h2>Your data</h2><p class="sub">Saved in this browser only. Copy it to keep a backup or move it to another device.</p></div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row"><button data-act="export">Copy data</button><button data-act="import">Load pasted data</button><button class="danger" data-act="reset">Reset to examples</button></div>
+  <textarea id="io" placeholder="Paste copied data here, then tap Load"></textarea><div class="err" id="io-err"></div></div></section>`;
+  return h;
+}
+
+/* ---------- interaction ---------- */
+const app=document.getElementById('app');
+const views={compare:rCompare,calendar:rCalendar,legs:rLegs,search:rSearch,trips:rTrips};
+function render(){
+  if(!views[tab])tab='compare';
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  app.innerHTML=views[tab]();
+}
+function go(t){tab=t;try{localStorage.setItem(KEY+':tab',t)}catch(e){}render();window.scrollTo(0,0)}
+function toast(msg,undoFn){
+  const el=document.getElementById('toast');el.innerHTML=`<span>${msg}</span>${undoFn?'<button id="undo">Undo</button>':''}`;el.hidden=false;
+  if(undoFn)document.getElementById('undo').onclick=()=>{undoFn();el.hidden=true;save();render()};
+  clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,5000);
+}
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)go(b.dataset.tab)});
+const val=id=>(document.getElementById(id)?.value||'').trim();
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act,k=b.dataset.k;
+  if(a==='sort'){S.sort=k}
+  else if(a==='view'){S.view=k}
+  else if(a==='tab'){go(k);return}
+  else if(a==='more'){showAll[k]=!showAll[k]}
+  else if(a==='pin'){const t=b.dataset.t;S.pins[t]=S.pins[t]===k?undefined:k}
+  else if(a==='edit'){const l=S.legs.find(x=>x.id===k);editing=k;draft={...l};render();document.getElementById('legform').scrollIntoView({block:'start'});return}
+  else if(a==='cancel'){editing=null;draft=null}
+  else if(a==='del'){const i=S.legs.findIndex(x=>x.id===k);const [l]=S.legs.splice(i,1);toast('Leg deleted',()=>S.legs.splice(i,0,l))}
+  else if(a==='clearEx'){const old=S.legs;S.legs=S.legs.filter(l=>!l.example);toast('Example legs cleared',()=>S.legs=old)}
+  else if(a==='prefill'){draft={from:b.dataset.f==='LON'?'LHR':b.dataset.f,to:b.dataset.t==='LON'?'LHR':b.dataset.t,depD:b.dataset.d,arrD:b.dataset.d,mode:'flight',stops:0};editing=null;save();go('legs');return}
+  else if(a==='custom'){const f=val('c-from').toUpperCase(),t=val('c-to').toUpperCase(),d=val('c-d'),r=val('c-r')||null;
+    document.getElementById('c-out').innerHTML=f&&t&&d?`<div class="links">${linkRow({f,t,d,r,why:null})}</div>`:'<div class="err">Enter from, to and a date.</div>';return}
+  else if(a==='bulk'){
+    const lines=val('bulk').split('\n').map(s=>s.trim()).filter(Boolean),bad=[],add=[];
+    lines.forEach((ln,i)=>{const p=ln.split(',').map(s=>s.trim());
+      if(p.length<7||!/^\d{4}-\d\d-\d\d$/.test(p[2])||!/^\d{4}-\d\d-\d\d$/.test(p[4])||!/^\d\d?:\d\d$/.test(p[3])||!/^\d\d?:\d\d$/.test(p[5])){bad.push(i+1);return}
+      add.push({id:uid(),from:p[0].toUpperCase(),to:p[1].toUpperCase(),depD:p[2],depT:p[3].padStart(5,'0'),arrD:p[4],arrT:p[5].padStart(5,'0'),price:+p[6].replace(/[£,]/g,'')||0,carrier:p[7]||'',tag:p[8]||'',mode:['ferry','transfer'].includes(p[9])?p[9]:'flight',stops:0,note:''})});
+    if(bad.length){document.getElementById('bulk-err').textContent=`Line ${bad.join(', ')} isn't in the expected format. Check dates are YYYY-MM-DD and times HH:MM.`;return}
+    S.legs.push(...add);toast(`${add.length} leg${add.length===1?'':'s'} added`)}
+  else if(a==='addParty'){S.parties.push({id:uid(),name:'New group',people:2,rooms:1})}
+  else if(a==='delParty'){if(S.scenarios.some(s=>s.trips.some(t=>t.partyId===k))){toast('That group is used in a date option. Remove it there first.');return}S.parties=S.parties.filter(p=>p.id!==k)}
+  else if(a==='addScen'){const s=S.scenarios[S.scenarios.length-1];S.scenarios.push({id:uid(),name:'New option',trips:s?s.trips.map(t=>({...t,id:uid()})):[]})}
+  else if(a==='delScen'){const i=S.scenarios.findIndex(s=>s.id===k);const [s]=S.scenarios.splice(i,1);toast('Date option removed',()=>S.scenarios.splice(i,0,s))}
+  else if(a==='addTrip'){const s=S.scenarios.find(x=>x.id===k);const t=s.trips[0]||{from:'LON',to:'SAMUI',outDate:'2027-07-23',backDate:'2027-08-08',flex:0};s.trips.push({...t,id:uid(),partyId:S.parties[0]?.id})}
+  else if(a==='delTrip'){const s=S.scenarios.find(x=>x.id===b.dataset.s);s.trips=s.trips.filter(t=>t.id!==k)}
+  else if(a==='addHotel'){S.hotels.push({id:uid(),code:'',name:'',rate:0})}
+  else if(a==='delHotel'){S.hotels=S.hotels.filter(h=>h.id!==k)}
+  else if(a==='export'){const txt=JSON.stringify(S);const io=document.getElementById('io');
+    try{await navigator.clipboard.writeText(txt);toast('Data copied')}catch(err){io.value=txt;io.select();toast('Copy the selected text')}return}
+  else if(a==='import'){try{const d=JSON.parse(val('io'));if(!Array.isArray(d.legs)||!Array.isArray(d.scenarios))throw 0;S=d;toast('Data loaded')}catch(err){document.getElementById('io-err').textContent='That text isn\'t valid data from this page. Copy it again with "Copy data".';return}}
+  else if(a==='reset'){const old=S;S=seed();toast('Reset to examples',()=>S=old)}
+  save();render();
+});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.bar-row')){e.preventDefault();e.target.click()}});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.id==='f-depD'){const arr=document.getElementById('f-arrD');if(!arr.value)arr.value=el.value}
+  const ed=el.dataset.ed;if(!ed)return;
+  const p=ed.split('|');let v=el.value;
+  if(p[0]==='party'){const o=S.parties.find(x=>x.id===p[1]);o[p[2]]=p[2]==='name'?v:Math.max(1,+v||1)}
+  else if(p[0]==='scen'){S.scenarios.find(x=>x.id===p[1]).name=v}
+  else if(p[0]==='trip'){const t=S.scenarios.find(x=>x.id===p[1]).trips.find(x=>x.id===p[2]);t[p[3]]=['from','to'].includes(p[3])?v.toUpperCase():p[3]==='flex'?+v:v}
+  else if(p[0]==='hotel'){const h=S.hotels.find(x=>x.id===p[1]);h[p[2]]=p[2]==='rate'?+v||0:p[2]==='code'?v.toUpperCase():v}
+  else if(p[0]==='set'){S.settings[p[1]]=+v||0}
+  save();
+});
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='legform')return;e.preventDefault();
+  const g=id=>val('f-'+id);
+  const l={from:g('from').toUpperCase(),to:g('to').toUpperCase(),depD:g('depD'),depT:g('depT'),arrD:g('arrD')||g('depD'),arrT:g('arrT'),price:+g('price').replace(/[£,]/g,'')||0,carrier:g('carrier'),mode:g('mode'),stops:+g('stops'),tag:g('tag'),note:g('note')};
+  const err=document.getElementById('f-err');
+  if(!/^[A-Z]{3}$/.test(l.from)||!/^[A-Z]{3}$/.test(l.to)){err.textContent='Use 3-letter airport or pier codes, for example LHR and BKK.';return}
+  if(!l.depD||!l.depT||!l.arrT){err.textContent='Add the departure date and both times.';return}
+  if(utc(l.arrD,l.arrT,l.to)<=utc(l.depD,l.depT,l.from)){err.textContent='Arrival is before departure. Check the arrival date (overnight flights land the next day).';return}
+  if(editing){const i=S.legs.findIndex(x=>x.id===editing);S.legs[i]={...S.legs[i],...l,example:false};toast('Leg updated')}
+  else{S.legs.push({id:uid(),...l});toast('Leg added')}
+  editing=null;draft=null;save();render();
+});
+render();
+</script>
+</body>
+</html>
