@@ -118,11 +118,17 @@ function seed(){return{travellers:6,sort:'cheap',example:true,options:[
   {id:uid(),name:'Via Singapore',dates:'23 Jul – 9 Aug',legs:[
     leg('2027-07-23','LHR','SIN','Singapore Airlines',715),leg('2027-07-25','SIN','USM','Bangkok Airways',189),
     leg('2027-08-08','USM','SIN','Bangkok Airways',185),leg('2027-08-08','SIN','LHR','Singapore Airlines',690)],
-    hotels:[hotel('Singapore airport hotel',1,3,165)]}
-]}}
+    hotels:[hotel('Singapore airport hotel',1,3,165)]},
+  phuket()
+],added:['phuket']}}
+function phuket(){return {id:uid(),name:'Via Phuket',dates:'23 Jul – 9 Aug',legs:[
+    leg('2027-07-23','LHR','HKT','Qatar Airways, 1 stop',560),leg('2027-07-25','HKT','USM','Bangkok Airways',150),
+    leg('2027-08-08','USM','HKT','Bangkok Airways',150),leg('2027-08-08','HKT','LHR','Qatar Airways, 1 stop',560)],
+    hotels:[hotel('Phuket airport hotel',1,3,70)]}}
 
 let S=null;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!Array.isArray(S.options))S=seed();
+if(!(S.added||[]).includes('phuket')){S.options.push(phuket());S.added=[...(S.added||[]),'phuket']}
 const open=new Set();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
