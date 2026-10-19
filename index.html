@@ -107,7 +107,8 @@ textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);backg
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:22px;height:22px;border-radius:5px;display:grid;place-items:center}
 .legend i svg{width:14px;height:14px}
-.stamp{padding-block:0 28px;font:500 12px var(--mono);color:var(--muted);letter-spacing:.04em}
+.stamp{padding-block:0 28px;font:500 12px var(--mono);color:var(--muted);letter-spacing:.04em;line-height:1.8}
+.stamp a{color:var(--accent)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:9px;padding:10px 14px;display:flex;gap:12px;align-items:center;z-index:20;font-size:14px}
 .toast button{background:none;border:1px solid currentColor;color:inherit;padding:4px 10px}
 </style>
@@ -119,7 +120,7 @@ textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);backg
   <div class="board">London → Koh Samui · Summer 2027</div>
 </div></header>
 <main class="wrap" id="app"></main>
-<footer class="wrap stamp">Version 14 · Updated Mon 19 Oct 2026, 12:41</footer>
+<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 15 · Updated Mon 19 Oct 2026, 12:45</footer>
 <div id="toast" class="toast" hidden></div>
 
 <script>
