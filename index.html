@@ -51,6 +51,7 @@ input,select{font:15px var(--body);color:var(--ink);background:var(--bg);border:
 .opt.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .sum{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:start}
 .eyebrow{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ex{background:var(--sun-soft);color:var(--sun);border-radius:4px;padding:1px 6px;letter-spacing:.04em}
 .tag{background:var(--accent);color:var(--accent-ink);border-radius:4px;padding:1px 6px;letter-spacing:.04em}
 .name{font-size:18px;font-weight:600;margin:2px 0 0;text-wrap:balance}
 .route{font:500 13px var(--mono);color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
@@ -120,16 +121,16 @@ textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);backg
 <div id="toast" class="toast" hidden></div>
 
 <script>
-const KEY='samui-simple-v1';
+const KEY='samui-simple-v2';
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gbp=n=>'£'+Math.round(n).toLocaleString('en-GB');
-const leg=(date,from,to,carrier,price,mode='flight')=>({id:uid(),date,from,to,carrier,price,mode});
+const leg=(date,from,to,carrier,price,mode='flight',ok=false)=>({id:uid(),date,from,to,carrier,price,mode,ok});
 const hotel=(place,nights,rooms,rate)=>({id:uid(),place,nights,rooms,rate});
 
 function seed(){return{travellers:6,stay:3000,sort:'cheap',example:true,options:[
   {id:uid(),name:'Direct to Samui (one ticket)',dates:'23 Jul – 9 Aug',legs:[
-    leg('2027-07-23','LHR','USM','Thai + Bangkok Airways, 1 stop',620),leg('2027-08-08','USM','LHR','Bangkok Airways + Thai, 1 stop',620)],hotels:[]},
+    leg('2027-07-23','LHR','USM','EVA Air, via Bangkok (return fare)',1331,'flight',true),leg('2027-08-08','USM','LHR','EVA Air, via Bangkok (included in return)',0,'flight',true)],hotels:[]},
   {id:uid(),name:'Bangkok overnight, fly to Samui next day',dates:'23 Jul – 9 Aug',legs:[
     leg('2027-07-23','LHR','BKK','EVA Air',430),leg('2027-07-25','BKK','USM','Bangkok Airways',165),
     leg('2027-08-08','USM','BKK','Bangkok Airways',160),leg('2027-08-09','BKK','LHR','EVA Air',430)],
@@ -176,7 +177,7 @@ function legRow(o,l){return `<div class="r leg" data-o="${o.id}" data-l="${l.id}
   <label>From<input id="f-${l.id}" data-f="from" value="${esc(l.from)}"></label>
   <label>To<input id="t-${l.id}" data-f="to" value="${esc(l.to)}"></label>
   <label class="w2">Airline / ferry<input id="c-${l.id}" data-f="carrier" value="${esc(l.carrier)}"></label>
-  <label>£ per person<input id="p-${l.id}" data-f="price" inputmode="decimal" value="${esc(l.price)}"></label>
+  <label>£ per person${l.ok?'':' (example)'}<input id="p-${l.id}" data-f="price" inputmode="decimal" value="${esc(l.price)}"></label>
   <button class="x" data-act="delLeg" aria-label="Remove leg">×</button>
   <label class="sub" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="m-${l.id}" data-f="mode" ${l.mode==='ferry'?'checked':''} style="width:auto"> Ferry or coach (not a flight)</label>
 </div>`}
@@ -238,10 +239,10 @@ function render(){
   const best=list.length?Math.min(...list.map(x=>x.c.total)):0;
   let h=tabs+`<div class="bar"><div class="seg" role="group" aria-label="Sort">${[['cheap','Cheapest'],['flights','Fewest flights'],['order','My order']].map(([k,l])=>`<button data-act="sort" data-k="${k}" aria-pressed="${S.sort===k}">${l}</button>`).join('')}</div>
    <div style="display:flex;gap:14px;flex-wrap:wrap"><label class="trav" style="flex-direction:row">Travellers <input id="trav" type="number" min="1" value="${S.travellers}"></label><label class="trav" style="flex-direction:row">Samui Airbnb £ <input id="stay" inputmode="decimal" value="${S.stay}" style="width:90px"></label></div></div>`;
-  if(S.example)h+=`<div class="note"><b>Example prices.</b> Open Details on each option to put in what you find on Google Flights. <button class="link" data-act="clearEx">Hide this</button></div>`;
+  {const all=S.options.flatMap(o=>o.legs),real=all.filter(l=>l.ok).length;if(real<all.length)h+=`<div class="note"><b>${real} of ${all.length} fares are real.</b> Options marked "Example prices" still use placeholders.</div>`}
   h+=list.map(({o,n,c})=>`<article class="opt${c.total===best&&list.length>1?' best':''}" id="o-${o.id}">
    <div class="sum">
-    <div><div class="eyebrow">Option ${n}${c.total===best&&list.length>1?'<span class="tag">Cheapest</span>':''}<span>${esc(o.dates)}</span></div>
+    <div><div class="eyebrow">Option ${n}${c.total===best&&list.length>1?'<span class="tag">Cheapest</span>':''}<span>${esc(o.dates)}</span>${o.legs.some(l=>!l.ok)?'<span class="ex">Example prices</span>':''}</div>
      <div class="name">${esc(o.name)}</div><div class="route" data-sum="route">${route(o)}</div></div>
     <div class="total"><b data-sum="total">${gbp(c.total)}</b><small data-sum="pp">${gbp(c.pp)} each</small></div>
     <div class="facts" data-sum="facts">${facts(c)}</div>
@@ -281,7 +282,7 @@ document.addEventListener('input',e=>{
   const card=el.closest('.opt');if(!card)return;const o=find(card.id.slice(2));
   if(el.dataset.of){o[el.dataset.of]=el.value;if(el.dataset.of==='name')card.querySelector('.name').textContent=el.value}
   const lr=el.closest('[data-l]'),hr=el.closest('[data-h]');
-  if(lr){const l=o.legs.find(x=>x.id===lr.dataset.l);const f=el.dataset.f;l[f]=f==='mode'?(el.checked?'ferry':'flight'):f==='price'?el.value.replace(/[£,\s]/g,''):f==='from'||f==='to'?el.value.toUpperCase().length<=4?el.value.toUpperCase():el.value:el.value}
+  if(lr){const l=o.legs.find(x=>x.id===lr.dataset.l);const f=el.dataset.f;l[f]=f==='mode'?(el.checked?'ferry':'flight'):f==='price'?(l.ok=true,el.value.replace(/[£,\s]/g,'')):f==='from'||f==='to'?el.value.toUpperCase().length<=4?el.value.toUpperCase():el.value:el.value}
   if(hr){const x=o.hotels.find(y=>y.id===hr.dataset.h);x[el.dataset.f]=el.dataset.f==='place'?el.value:el.value.replace(/[£,\s]/g,'')}
   refresh(o);save();
 });
