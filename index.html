@@ -104,7 +104,7 @@ const gbp=n=>'£'+Math.round(n).toLocaleString('en-GB');
 const leg=(date,from,to,carrier,price,mode='flight')=>({id:uid(),date,from,to,carrier,price,mode});
 const hotel=(place,nights,rooms,rate)=>({id:uid(),place,nights,rooms,rate});
 
-function seed(){return{travellers:6,sort:'cheap',example:true,options:[
+function seed(){return{travellers:6,stay:3000,sort:'cheap',example:true,options:[
   {id:uid(),name:'Direct to Samui (one ticket)',dates:'23 Jul – 9 Aug',legs:[
     leg('2027-07-23','LHR','USM','Thai + Bangkok Airways, 1 stop',620),leg('2027-08-08','USM','LHR','Bangkok Airways + Thai, 1 stop',620)],hotels:[]},
   {id:uid(),name:'Bangkok overnight, fly to Samui next day',dates:'23 Jul – 9 Aug',legs:[
@@ -128,6 +128,7 @@ function phuket(){return {id:uid(),name:'Via Phuket',dates:'23 Jul – 9 Aug',le
 
 let S=null;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!Array.isArray(S.options))S=seed();
+if(S.stay==null)S.stay=3000;
 if(!(S.added||[]).includes('phuket')){S.options.push(phuket());S.added=[...(S.added||[]),'phuket']}
 const open=new Set();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -138,7 +139,8 @@ function calc(o){
   const hotels=o.hotels.reduce((s,h)=>s+(+h.nights||0)*(+h.rooms||0)*(+h.rate||0),0);
   const flights=o.legs.filter(l=>l.mode==='flight').length,boats=o.legs.length-flights;
   const nights=o.hotels.reduce((s,h)=>s+(+h.nights||0),0);
-  return{total:fares+hotels,pp:(fares+hotels)/t,fares,hotels,flights,boats,nights};
+  const stay=+S.stay||0;
+  return{total:fares+hotels+stay,pp:(fares+hotels+stay)/t,fares,hotels,stay,flights,boats,nights};
 }
 function route(o){
   const out=[];for(const l of o.legs){if(!out.length||out[out.length-1]!==l.from)out.push(l.from);out.push(l.to)}
@@ -169,7 +171,7 @@ function render(){
   if(S.sort==='flights')list.sort((a,b)=>a.c.flights-b.c.flights||a.c.total-b.c.total);
   const best=list.length?Math.min(...list.map(x=>x.c.total)):0;
   let h=`<div class="bar"><div class="seg" role="group" aria-label="Sort">${[['cheap','Cheapest'],['flights','Fewest flights'],['order','My order']].map(([k,l])=>`<button data-act="sort" data-k="${k}" aria-pressed="${S.sort===k}">${l}</button>`).join('')}</div>
-   <label class="trav" style="flex-direction:row">Travellers <input id="trav" type="number" min="1" value="${S.travellers}"></label></div>`;
+   <div style="display:flex;gap:14px;flex-wrap:wrap"><label class="trav" style="flex-direction:row">Travellers <input id="trav" type="number" min="1" value="${S.travellers}"></label><label class="trav" style="flex-direction:row">Samui Airbnb £ <input id="stay" inputmode="decimal" value="${S.stay}" style="width:90px"></label></div></div>`;
   if(S.example)h+=`<div class="note"><b>Example prices.</b> Open Details on each option to put in what you find on Google Flights. <button class="link" data-act="clearEx">Hide this</button></div>`;
   h+=list.map(({o,n,c})=>`<article class="opt${c.total===best&&list.length>1?' best':''}" id="o-${o.id}">
    <div class="sum">
@@ -193,7 +195,7 @@ function render(){
     <textarea id="io" placeholder="Paste copied data here"></textarea></div></details>`;
   document.getElementById('app').innerHTML=h;
 }
-function facts(c){return `<span><b>${c.flights}</b> flight${c.flights===1?'':'s'}${c.boats?` + <b>${c.boats}</b> ferry`:''}</span>${c.nights?`<span><b>${c.nights}</b> hotel night${c.nights>1?'s':''} · ${gbp(c.hotels)}</span>`:''}<span>Fares ${gbp(c.fares)}</span>`}
+function facts(c){return `<span><b>${c.flights}</b> flight${c.flights===1?'':'s'}${c.boats?` + <b>${c.boats}</b> ferry`:''}</span>${c.nights?`<span><b>${c.nights}</b> hotel night${c.nights>1?'s':''} · ${gbp(c.hotels)}</span>`:''}<span>Fares ${gbp(c.fares)}</span>${c.stay?`<span>Airbnb ${gbp(c.stay)}</span>`:''}`}
 function refresh(o){
   const card=document.getElementById('o-'+o.id);if(!card)return;const c=calc(o);
   card.querySelector('[data-sum=total]').textContent=gbp(c.total);
@@ -209,6 +211,7 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches(
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='trav'){S.travellers=Math.max(1,+el.value||1);S.options.forEach(refresh);save();return}
+  if(el.id==='stay'){S.stay=+el.value.replace(/[£,\s]/g,'')||0;S.options.forEach(refresh);save();return}
   const card=el.closest('.opt');if(!card)return;const o=find(card.id.slice(2));
   if(el.dataset.of){o[el.dataset.of]=el.value;if(el.dataset.of==='name')card.querySelector('.name').textContent=el.value}
   const lr=el.closest('[data-l]'),hr=el.closest('[data-h]');
