@@ -120,11 +120,11 @@ textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);backg
   <div class="board">London → Koh Samui · Summer 2027</div>
 </div></header>
 <main class="wrap" id="app"></main>
-<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 15 · Updated Mon 19 Oct 2026, 12:45</footer>
+<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 16 · Updated Mon 19 Oct 2026, 12:49</footer>
 <div id="toast" class="toast" hidden></div>
 
 <script>
-const KEY='samui-simple-v9';
+const KEY='samui-simple-v10';
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gbp=n=>'£'+Math.round(n).toLocaleString('en-GB');
@@ -140,19 +140,19 @@ function seed(){return{travellers:6,stay:3000,sort:'cheap',options:[
   {id:uid(),name:'Bangkok overnight, fly to Samui next day',dates:'23 Jul – 9 Aug',legs:[
     bkk(),pick('2027-07-25','BKK','USM',[{c:'Bangkok Airways 6am',p:122},{c:'Bangkok Airways, later flight',p:189}],'Flight (return, per person)'),
     ret('2027-08-08','USM','BKK','Bangkok–Samui'),ret('2027-08-09','BKK','LHR','London–Bangkok')],
-    hotels:[hotel('Centre Point Sukhumvit Thong-Lo (2-bed unit, sleeps 6)',1,1,200)]},
+    hotels:[hotel('Centre Point Sukhumvit Thong-Lo (2-bed unit, sleeps 6), 24 Jul + 8 Aug',2,1,200)]},
   {id:uid(),name:'Bangkok, then Surat Thani and ferry',dates:'23 Jul – 9 Aug',legs:[
     bkk(),leg('2027-07-25','BKK','URT','Thai Airways (return fare)',65,'flight',true),leg('2027-07-25','URT','Samui','Lomprayah coach + ferry',22,'ferry'),
     leg('2027-08-08','Samui','URT','Lomprayah ferry + coach',22,'ferry'),ret('2027-08-08','URT','BKK','Bangkok–Surat Thani'),ret('2027-08-09','BKK','LHR','London–Bangkok')],
-    hotels:[hotel('Centre Point Sukhumvit Thong-Lo (2-bed unit, sleeps 6)',1,1,200)]},
+    hotels:[hotel('Centre Point Sukhumvit Thong-Lo (2-bed unit, sleeps 6), 24 Jul + 8 Aug',2,1,200)]},
   {id:uid(),name:'Via Singapore',dates:'23 Jul – 9 Aug',legs:[
     pick('2027-07-23','LHR','SIN',[{c:'Gulf Air via Jeddah (19h)',p:844},{c:'British Airways direct',p:1113}]),leg('2027-07-25','SIN','USM','Scoot (return fare)',265,'flight',true),
-    ret('2027-08-08','USM','SIN','Singapore–Samui'),ret('2027-08-08','SIN','LHR','London–Singapore')],
-    hotels:[hotel('Crowne Plaza Changi Airport',1,2,300)]},
+    ret('2027-08-08','USM','SIN','Singapore–Samui'),ret('2027-08-09','SIN','LHR','London–Singapore')],
+    hotels:[hotel('Crowne Plaza Changi Airport, 24 Jul + 8 Aug',2,2,300)]},
   {id:uid(),name:'Via Phuket',dates:'23 Jul – 9 Aug',legs:[
     pick('2027-07-23','LHR','HKT',[{c:'Air Arabia via Sharjah (16h)',p:804},{c:'Thai Airways',p:1168}]),leg('2027-07-25','HKT','USM','Bangkok Airways (return fare)',211,'flight',true),
-    ret('2027-08-08','USM','HKT','Phuket–Samui'),ret('2027-08-08','HKT','LHR','London–Phuket')],
-    hotels:[hotel('Dewa Phuket, Nai Yang',1,2,80.5)]}
+    ret('2027-08-08','USM','HKT','Phuket–Samui'),ret('2027-08-09','HKT','LHR','London–Phuket')],
+    hotels:[hotel('Dewa Phuket, Nai Yang, 24 Jul + 8 Aug',2,2,80.5)]}
 ]}}
 
 let S=null;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -209,7 +209,9 @@ function plan(o){
   for(let d=legs[0].date,i=0;d<=legs[legs.length-1].date;d=addD(d,1)){
     const today=legs.filter(l=>l.date===d);
     while(i<legs.length&&legs[i].date<d)i++;
-    if(today.length){days[d]={k:'travel',icons:[...new Set(today.map(l=>l.mode==='ferry'?'boat':'plane'))],t:today.map(l=>`${l.from} → ${l.to}${l.carrier?' · '+l.carrier:''}`).join('\n')};continue}
+    if(today.length){const icons=[...new Set(today.map(l=>l.mode==='ferry'?'boat':'plane'))],lt=today[today.length-1],nx=legs.find(l=>l.date>d);let t=today.map(l=>`${l.from} → ${l.to}${l.carrier?' · '+l.carrier:''}`).join('\n');
+      if(nx&&o.hotels.length&&!isSamui(lt.to)&&!/^(LHR|LGW|STN|LTN|LCY|LON)$/i.test(lt.from)){icons.push('bed');t+='\nNight: '+o.hotels[0].place}
+      days[d]={k:'travel',icons,t};continue}
     const at=legs[i-1]?.to||'';
     if(isSamui(at))days[d]={k:'samui',icons:['palm'],t:'On Samui'};
     else if(o.hotels.length)days[d]={k:'hotel',icons:['bed'],t:'Hotel'+(o.hotels[0].place?': '+o.hotels[0].place:'')};
