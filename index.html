@@ -121,11 +121,11 @@ textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);backg
   <div class="board">London → Koh Samui · Summer 2027</div>
 </div></header>
 <main class="wrap" id="app"></main>
-<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 19 · Updated Mon 19 Oct 2026, 14:18</footer>
+<footer class="wrap stamp">Share: <a href="https://tinyurl.com/Samui-ideas" target="_blank" rel="noopener">tinyurl.com/Samui-ideas</a><br>Version 20 · Updated Mon 19 Oct 2026, 14:39</footer>
 <div id="toast" class="toast" hidden></div>
 
 <script>
-const KEY='samui-simple-v10';
+const KEY='samui-simple-v11';
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gbp=n=>'£'+Math.round(n).toLocaleString('en-GB');
@@ -143,8 +143,8 @@ function seed(){return{travellers:6,stay:3000,sort:'cheap',options:[
     ret('2027-08-08','USM','BKK','Bangkok–Samui'),ret('2027-08-09','BKK','LHR','London–Bangkok')],
     hotels:[hotel('Centre Point Sukhumvit Thong-Lo (2-bed unit, sleeps 6), 24 Jul + 8 Aug',2,1,200)]},
   {id:uid(),name:'Bangkok, then Surat Thani and ferry',dates:'23 Jul – 9 Aug',legs:[
-    bkk(),leg('2027-07-25','BKK','URT','Thai Airways (return fare)',65,'flight',true),leg('2027-07-25','URT','Samui','Lomprayah coach + ferry',22,'ferry'),
-    leg('2027-08-08','Samui','URT','Lomprayah ferry + coach',22,'ferry'),ret('2027-08-08','URT','BKK','Bangkok–Surat Thani'),ret('2027-08-09','BKK','LHR','London–Bangkok')],
+    bkk(),leg('2027-07-25','BKK','URT','Thai Airways (return fare)',65,'flight',true),leg('2027-07-25','URT','Samui','Lomprayah coach + ferry (return, 850 THB ≈ £20)',20,'ferry',true),
+    leg('2027-08-08','Samui','URT','Lomprayah ferry + coach (included in return)',0,'ferry',true),ret('2027-08-08','URT','BKK','Bangkok–Surat Thani'),ret('2027-08-09','BKK','LHR','London–Bangkok')],
     hotels:[hotel('Centre Point Sukhumvit Thong-Lo (2-bed unit, sleeps 6), 24 Jul + 8 Aug',2,1,200)]},
   {id:uid(),name:'Via Singapore',dates:'23 Jul – 9 Aug',legs:[
     pick('2027-07-23','LHR','SIN',[{c:'Gulf Air via Jeddah (19h)',p:844},{c:'British Airways direct',p:1113}]),leg('2027-07-25','SIN','USM','Scoot (return fare)',265,'flight',true),
