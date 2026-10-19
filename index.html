@@ -13,17 +13,17 @@
 /* Layout: departure-board header, then one column of option cards; each card's editor hides in a collapsible panel */
 :root{
   --bg:#EDF3F4; --surface:#FFFFFF; --ink:#10252C; --muted:#566C73; --line:#D2DFE2; --chip:#E1EBED;
-  --accent:#0B6B75; --accent-ink:#FFFFFF; --sun:#B87612; --sun-soft:#FBEED3; --bad:#B23A3A; --board:#0F2128; --board-ink:#F2C14E;
+  --accent:#0B6B75; --accent-ink:#FFFFFF; --sun:#B87612; --sun-soft:#FBEED3; --bad:#B23A3A; --board:#0F2128; --board-ink:#F2C14E; --sea:#2E7FB8; --sea-soft:#DDEBF6; --palm:#2F8A57; --palm-soft:#DDF0E4; --bed:#7A55B0; --bed-soft:#ECE4F7;
   --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
   --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0B161A; --surface:#12222A; --ink:#E3EDEF; --muted:#8EA5AC; --line:#233840; --chip:#1A2F37;
-  --accent:#43B5C0; --accent-ink:#04181B; --sun:#EAB24E; --sun-soft:#3A2D12; --bad:#E57A7A; --board:#060E11; --board-ink:#F2C14E; color-scheme:dark}}
+  --accent:#43B5C0; --accent-ink:#04181B; --sun:#EAB24E; --sun-soft:#3A2D12; --bad:#E57A7A; --board:#060E11; --board-ink:#F2C14E; --sea:#6DB2E6; --sea-soft:#15304A; --palm:#5CC488; --palm-soft:#143322; --bed:#B597E6; --bed-soft:#2A2040; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0B161A; --surface:#12222A; --ink:#E3EDEF; --muted:#8EA5AC; --line:#233840; --chip:#1A2F37;
-  --accent:#43B5C0; --accent-ink:#04181B; --sun:#EAB24E; --sun-soft:#3A2D12; --bad:#E57A7A; --board:#060E11; --board-ink:#F2C14E; color-scheme:dark}
+  --accent:#43B5C0; --accent-ink:#04181B; --sun:#EAB24E; --sun-soft:#3A2D12; --bad:#E57A7A; --board:#060E11; --board-ink:#F2C14E; --sea:#6DB2E6; --sea-soft:#15304A; --palm:#5CC488; --palm-soft:#143322; --bed:#B597E6; --bed-soft:#2A2040; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
 .wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -83,6 +83,29 @@ label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 textarea{width:100%;min-height:90px;font:12px var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px}
 .foot summary{color:var(--muted);padding-inline:0}
+/* calendar */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 12px 9px;color:var(--muted);font-size:14.5px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.cal-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.cal{display:grid;min-width:max-content}
+.cal .c{height:44px;width:34px;display:grid;place-items:center;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cal .hd{height:auto;padding:6px 0;font:500 11px var(--mono);color:var(--muted);text-align:center;line-height:1.2;background:var(--bg)}
+.cal .hd b{display:block;font-size:13px;color:var(--ink);font-weight:600}
+.cal .hd.we{color:var(--ink)}
+.cal .mo{grid-column:1/-1;display:none}
+.cal .lab{position:sticky;left:0;z-index:2;background:var(--surface);width:150px;padding:6px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;font-size:13px;line-height:1.25;box-shadow:1px 0 0 var(--line)}
+.cal .lab b{font-weight:600;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cal .lab small{font:500 12px var(--mono);color:var(--muted)}
+.cal .lab.hd{background:var(--bg);font:600 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.c.travel{background:var(--sea-soft);color:var(--sea)}
+.c.hotel{background:var(--bed-soft);color:var(--bed)}
+.c.samui{background:var(--palm-soft);color:var(--palm)}
+.c svg{width:17px;height:17px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:22px;height:22px;border-radius:5px;display:grid;place-items:center}
+.legend i svg{width:14px;height:14px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:9px;padding:10px 14px;display:flex;gap:12px;align-items:center;z-index:20;font-size:14px}
 .toast button{background:none;border:1px solid currentColor;color:inherit;padding:4px 10px}
 </style>
@@ -165,12 +188,55 @@ function hotelRow(o,h){return `<div class="r hotel" data-o="${o.id}" data-h="${h
   <button class="x" data-act="delHotel" aria-label="Remove hotel">×</button>
 </div>`}
 
+const ICON={
+ plane:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2.5 1.8V21L11.5 20l3.5 1v-1.2L12.5 18v-5z"/></svg>',
+ boat:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14h16l-2.2 4.4A2 2 0 0 1 16 19.5H8a2 2 0 0 1-1.8-1.1zM7 13l1-5h8l1 5zM11 4h2v3h-2zM2 21.5c1.7 0 2.5-1 4-1s2.3 1 4 1 2.5-1 4-1 2.3 1 4 1 2.3-1 4-1v-1.5c-1.7 0-2.5 1-4 1s-2.3-1-4-1-2.5 1-4 1-2.3-1-4-1-2.3 1-4 1z"/></svg>',
+ bed:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v8h6V8h7a3 3 0 0 1 3 3v8h-2v-3H5v3H3zm5 7a2.2 2.2 0 1 1 0-4.4A2.2 2.2 0 0 1 8 12z"/></svg>',
+ palm:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 9.2c.4 3.6.3 7.6-.6 11.8h-2c.9-3.9 1.1-7.6.7-11C8.2 9.5 5.6 10.6 3 12.5c1.2-3.4 4-5 7-5.2C8.5 5.7 6.2 5 4 5.3 6.7 3.4 9.7 3.6 11.7 5.9 12.6 3.6 15 2.4 18 3c-2.4.6-4 1.9-4.6 3.6 3.3-.6 6.2.6 7.6 3.6-2.5-1.4-5.4-1.6-8.4-1z"/></svg>',
+ home:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 7.5-1.3 1.5L18 10.6V20h-4.5v-5.5h-3V20H6v-9.4L4.3 12 3 10.5z"/></svg>'
+};
+const DAY=864e5,dU=d=>Date.parse(d+'T00:00:00Z'),addD=(d,k)=>new Date(dU(d)+k*DAY).toISOString().slice(0,10);
+const isSamui=c=>/^(USM|SMP)$/i.test(c)||/samui/i.test(c||'');
+function plan(o){
+  const legs=o.legs.filter(l=>/^\d{4}-\d\d-\d\d$/.test(l.date)).sort((a,b)=>a.date.localeCompare(b.date));
+  const days={};if(!legs.length)return days;
+  for(let d=legs[0].date,i=0;d<=legs[legs.length-1].date;d=addD(d,1)){
+    const today=legs.filter(l=>l.date===d);
+    while(i<legs.length&&legs[i].date<d)i++;
+    if(today.length){days[d]={k:'travel',icons:[...new Set(today.map(l=>l.mode==='ferry'?'boat':'plane'))],t:today.map(l=>`${l.from} → ${l.to}${l.carrier?' · '+l.carrier:''}`).join('\n')};continue}
+    const at=legs[i-1]?.to||'';
+    if(isSamui(at))days[d]={k:'samui',icons:['palm'],t:'On Samui'};
+    else if(o.hotels.length)days[d]={k:'hotel',icons:['bed'],t:'Hotel'+(o.hotels[0].place?': '+o.hotels[0].place:'')};
+    else days[d]={k:'travel',icons:[],t:'Travelling'};
+  }
+  return days;
+}
+function renderCal(){
+  const rows=S.options.map((o,i)=>({o,n:i+1,c:calc(o),days:plan(o)}));
+  const all=rows.flatMap(r=>Object.keys(r.days)).sort();
+  if(!all.length)return '<p>Add dates to your flights to see the calendar.</p>';
+  const dates=[];for(let d=all[0];d<=all[all.length-1];d=addD(d,1))dates.push(d);
+  const W=['S','M','T','W','T','F','S'];
+  let h=`<div class="legend"><span><i class="c travel">${ICON.plane}</i>Flight</span><span><i class="c travel">${ICON.boat}</i>Ferry</span><span><i class="c hotel">${ICON.bed}</i>Stopover hotel</span><span><i class="c samui">${ICON.palm}</i>On Samui</span></div>
+  <div class="cal-wrap"><div class="cal" style="grid-template-columns:150px repeat(${dates.length},34px)"><div class="lab hd">Option</div>`;
+  h+=dates.map(d=>{const t=new Date(dU(d)),dw=t.getUTCDay(),first=t.getUTCDate()===1||d===dates[0];
+    return `<div class="c hd${dw===0||dw===6?' we':''}">${first?t.toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'}):W[dw]}<b>${t.getUTCDate()}</b></div>`}).join('');
+  for(const r of rows){
+    const samui=Object.values(r.days).filter(x=>x.k==='samui').length;
+    h+=`<div class="lab"><b>${r.n}. ${esc(r.o.name)}</b><small>${gbp(r.c.total)} · ${samui} Samui days</small></div>`;
+    h+=dates.map(d=>{const x=r.days[d];return x?`<div class="c ${x.k}" title="${esc(fdT(d)+'\n'+x.t)}">${x.icons.map(k=>ICON[k]).join('')}</div>`:'<div class="c"></div>'}).join('');
+  }
+  return h+'</div></div><p style="font-size:13px;color:var(--muted);margin:0">Built from the dates on each option\'s flights. Tap and hold a day to see what\'s happening.</p>';
+}
+const fdT=d=>new Date(dU(d)).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
 function render(){
+  const tabs=`<div class="tabs" role="tablist"><button role="tab" data-act="tab" data-k="list" aria-selected="${S.tab!=='cal'}">Options</button><button role="tab" data-act="tab" data-k="cal" aria-selected="${S.tab==='cal'}">Calendar</button></div>`;
+  if(S.tab==='cal'){document.getElementById('app').innerHTML=tabs+renderCal();return}
   const list=S.options.map((o,i)=>({o,n:i+1,c:calc(o)}));
   if(S.sort==='cheap')list.sort((a,b)=>a.c.total-b.c.total);
   if(S.sort==='flights')list.sort((a,b)=>a.c.flights-b.c.flights||a.c.total-b.c.total);
   const best=list.length?Math.min(...list.map(x=>x.c.total)):0;
-  let h=`<div class="bar"><div class="seg" role="group" aria-label="Sort">${[['cheap','Cheapest'],['flights','Fewest flights'],['order','My order']].map(([k,l])=>`<button data-act="sort" data-k="${k}" aria-pressed="${S.sort===k}">${l}</button>`).join('')}</div>
+  let h=tabs+`<div class="bar"><div class="seg" role="group" aria-label="Sort">${[['cheap','Cheapest'],['flights','Fewest flights'],['order','My order']].map(([k,l])=>`<button data-act="sort" data-k="${k}" aria-pressed="${S.sort===k}">${l}</button>`).join('')}</div>
    <div style="display:flex;gap:14px;flex-wrap:wrap"><label class="trav" style="flex-direction:row">Travellers <input id="trav" type="number" min="1" value="${S.travellers}"></label><label class="trav" style="flex-direction:row">Samui Airbnb £ <input id="stay" inputmode="decimal" value="${S.stay}" style="width:90px"></label></div></div>`;
   if(S.example)h+=`<div class="note"><b>Example prices.</b> Open Details on each option to put in what you find on Google Flights. <button class="link" data-act="clearEx">Hide this</button></div>`;
   h+=list.map(({o,n,c})=>`<article class="opt${c.total===best&&list.length>1?' best':''}" id="o-${o.id}">
@@ -223,6 +289,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
   const o=find(b.dataset.o||b.closest('[data-o]')?.dataset.o);
   if(a==='sort')S.sort=b.dataset.k;
+  else if(a==='tab')S.tab=b.dataset.k;
   else if(a==='clearEx')S.example=false;
   else if(a==='addLeg'){const last=o.legs[o.legs.length-1];o.legs.push(leg(last?.date||'',last?.to||'','','',0))}
   else if(a==='delLeg'){const id=b.closest('[data-l]').dataset.l;const i=o.legs.findIndex(x=>x.id===id);const[r]=o.legs.splice(i,1);toast('Leg removed',()=>o.legs.splice(i,0,r))}
